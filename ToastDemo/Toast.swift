@@ -20,48 +20,100 @@ func ==(lhs: Toast.Task, rhs: Toast.Task) -> Bool {
 
 struct Toast {
     
+    static private var changes:[AnyClass] = []
+    static private func isChange(cls:AnyClass) -> Bool {
+        for objCls in changes {
+            if objCls == cls { return true }
+        }
+        return false
+    }
+
+    static var fontSize:CGFloat = 13
     static var interval:CGFloat = 5     // 默认 Toast.Task 间隔
     
     static var tasksQueue:[Task] = []   // 显示 Toast.Task 队列
     static var cleanQueue:[Task] = []   // 移除 Toast.Task 队列
     static var activityTask:ActivityTask? = nil
     
+    /// 显示活动等待视图
     static func makeActivity(controller:UIViewController, message:String) -> ActivityTask {
-        let task = ActivityTask(controller: controller, message: message)
-        //task.duration = 300000
+        return ActivityTask(controller: controller, message: message)
+    }
+    
+    /// 显示自定义控制器的视图
+    static func makeCustomView(controller:UIViewController, toastController:UIViewController, duration: NSTimeInterval = 8) -> Task {
+        let task = Task(controller: controller, view:toastController.view)
+        task.childController = toastController
+        task.duration = duration
         
         return task
     }
     
-    static func makeText(controller:UIViewController, message:String, duration: NSTimeInterval) -> Task {
+    /// 显示带背景 View 的自定义控制器的视图
+    static func makeView(controller:UIViewController, toastController:UIViewController, duration: NSTimeInterval = 8) -> Task {
+        let task = makeView(controller, childView: toastController.view, duration: duration)
+        task.childController = toastController
+        return task
+    }
+    
+    /// 显示自定义视图
+    static func makeCustomView(controller:UIViewController, view:UIView, duration: NSTimeInterval = 8) -> Task {
+        let task = Task(controller: controller, view:view)
+        task.duration = duration
+        
+        return task
+    }
+    
+    /// 显示带背景 View 的自定义视图
+    static func makeView(controller:UIViewController, childView child:UIView, duration: NSTimeInterval = 8) -> Task {
+        
+        let insets = child.layoutMargins
+
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: child.frame.width + insets.left + insets.right, height: child.frame.height + insets.top + insets.bottom))
+        
+        view.backgroundColor = UIColor(white: 0.2, alpha: 0.6)
+        view.layer.cornerRadius = view.frame.height / 2
+        view.layer.shadowColor = UIColor.blackColor().CGColor
+        view.layer.shadowOpacity = 0.8
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.addSubview(child)
+        
+        return makeCustomView(controller, view: view, duration: duration)
+    }
+    
+    /// 显示文本通知视图
+    static func makeText(controller:UIViewController, message:String, duration: NSTimeInterval = 8) -> Task {
         
         let insets = UIEdgeInsets(top: 2, left: 10, bottom: 2, right: 10)
         
         let label:UILabel = UILabel()
-        label.font = UIFont.systemFontOfSize(13)
+        label.font = UIFont.systemFontOfSize(Toast.fontSize)
         label.numberOfLines = 0
         label.text = message
         label.textColor = UIColor.whiteColor()
         label.layoutMargins = insets
         label.sizeToFit()
         label.frame.origin = CGPoint(x: insets.left, y: insets.top)
-        
-        let view = UIView(frame: CGRect(x: 0, y: 0, width: label.frame.width + insets.left + insets.right, height: label.frame.height + insets.top + insets.bottom))
-        
-        view.clipsToBounds = true
-        view.backgroundColor = UIColor(white: 0.2, alpha: 0.8)
-        view.layer.cornerRadius = view.frame.height / 2
-        view.layer.shadowColor = UIColor.blackColor().CGColor
-        view.layer.shadowOpacity = 0.8
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.addSubview(label)
-
-        let task = Task(controller: controller, view:view)
-        task.duration = duration
-        
-        return task
-        
+ 
+        return makeView(controller, childView: label, duration: duration)
     }
+    
+    static func taskFilterWithController(controller:UIContentContainer) -> [Task] {
+        var tasks:[Task] = []
+        
+        // 显示活动状态 Activity
+        if let task = activityTask where controller.isEqual(task.viewController) {
+            tasks.append(task)
+        }
+        
+        // 要显示的 Toast.Task
+        for task:Task in tasksQueue where controller.isEqual(task.viewController) {
+            tasks.append(task)
+        }
+        
+        return tasks
+    }
+    
     
     static private var afterBlock:dispatch_block_t?
     static private func animateTasks(isAfter:Bool = false) {
@@ -70,11 +122,11 @@ struct Toast {
 
         let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
         let startY = screenSize.height * 0.75
-        
+        var offsetY:CGFloat = 0
+
         // 处理队列中要显示的
         
         var minDismissTime:NSTimeInterval = 0
-        var offsetY:CGFloat = 0
         
         // 将超时的 Toast.Task 都加入移除队列
         for var i:Int = tasksQueue.count - 1; i>=0; i-- {
@@ -93,7 +145,6 @@ struct Toast {
         // 所有需显示的
         for var i:Int = tasksQueue.count - 1; i>=0; i-- {
             let task = tasksQueue[i]
-            //print("begin i:\(i)")
             
             var size = task.defaultSize
             var x = (screenSize.width - size.width) / 2
@@ -107,15 +158,16 @@ struct Toast {
                 size = CGSize(width: side, height: side)
                 offsetY = 0
                 
-                for view in task.view.subviews {
-                    view.hidden = true
-                }
                 // 给未显示的 Toast.Task 补时间
                 if isAfter { tasksQueue[i].dismissTime += minDismissTime - currentTime }
-                //print("task i:\(i) time:\(tasksQueue[i].dismissTime)")
-
+                
+                // 隐藏 等待状态 Toast.Task 的子视图
+                for view in task.view.subviews where !view.hidden {
+                    view.hidden = true
+                }
             } else {
-                for view in task.view.subviews {
+                // 显示 等待状态 Toast.Task 的子视图
+                for view in task.view.subviews where view.hidden {
                     view.hidden = false
                 }
             }
@@ -134,9 +186,7 @@ struct Toast {
 
         }
         
-        
         if let task = activityTask {
-            
             
             let size = task.view.frame.size
             task.frame.size = size
@@ -148,6 +198,9 @@ struct Toast {
                 frame.origin.y = frame.midY + 30
                 task.view.frame = frame
                 UIApplication.sharedApplication().keyWindow?.addSubview(task.view)
+                if let controller = task.childController {
+                    task.viewController?.addChildViewController(controller)
+                }
             }
         }
         
@@ -182,7 +235,7 @@ struct Toast {
             // 动画结束时 将移除列表清空
             for task in cleanQueue {
                 task.view.removeFromSuperview()
-                task.viewController?.removeToastTask(task)
+                task.childController?.removeFromParentViewController()
             }
             cleanQueue.removeAll()
         }
@@ -191,14 +244,12 @@ struct Toast {
         if Toast.afterBlock == nil && minDismissTime > 0 {
 
             Toast.afterBlock = {
-                //print("delay : \(CACurrentMediaTime())")
                 Toast.afterBlock = nil
                 Toast.animateTasks(true)
             }
             
             let delay:NSTimeInterval = (minDismissTime - currentTime + 0.01) * Double(NSEC_PER_SEC)
             let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
-            //print("begin : \(minDismissTime - currentTime)")
 
             dispatch_after(time, dispatch_get_main_queue(), Toast.afterBlock!)
         }
@@ -231,8 +282,8 @@ struct Toast {
             
             //print("activityView.frame.height:\(activityView.frame.width)")
             view.backgroundColor = UIColor(white: 0.2, alpha: 0.6)
-            view.clipsToBounds = true
-            view.layer.cornerRadius = 7
+
+            view.layer.cornerRadius = 8
             
             view.layer.shadowColor = UIColor.blackColor().CGColor
             view.layer.shadowOpacity = 0.8
@@ -272,6 +323,7 @@ struct Toast {
         
         let view:UIView
         weak var viewController:UIViewController?
+        weak var childController:UIViewController?
         
         var duration:NSTimeInterval = 0
         var dismissTime:NSTimeInterval = 0
@@ -285,7 +337,38 @@ struct Toast {
             self.view = view
             self.defaultSize = view.bounds.size
 
-            controller.addToastTask(self)
+            let cls:AnyClass = object_getClass(controller)
+///*
+            if !Toast.isChange(cls) {
+                Toast.changes.append(cls)
+                let viewDidDisappearMethod = class_getInstanceMethod(cls, Selector("viewDidDisappear:"))
+                
+                let selfDidDisappearMethod = class_getInstanceMethod(cls, Selector("__selfDidDisappear:"))
+                
+                let taskDidDisappearIMP = method_getImplementation(class_getInstanceMethod(UIViewController.self, Selector("taskDidDisappear:")))
+                
+                let viewDidDisappearIMP = method_setImplementation(viewDidDisappearMethod, taskDidDisappearIMP)
+                
+                //class_addMethod(cls, Selector("selfDidDisappear:"), viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
+
+                method_setImplementation(selfDidDisappearMethod, viewDidDisappearIMP)
+                
+                //method_exchangeImplementations(viewDidDisappearMethod, toastDidDisappearMethod)
+
+                print("cls:\(NSStringFromClass(cls))")
+            }
+//*/
+//            if !Toast.isChange {
+//                Toast.isChange = true
+//                
+//                // 第一次进入时 交换 viewWillDisappear 函数
+//                let viewDidDisappearMethod = class_getInstanceMethod(UIViewController.self, Selector("viewWillDisappear:"))
+//                
+//                
+//                
+//                method_exchangeImplementations(viewDidDisappearMethod, toastDidDisappearMethod)
+//            }
+//            controller.changeViewDidDisappear(self)
         }
         
         func show() {
@@ -317,58 +400,65 @@ struct Toast {
 
 extension UIViewController {
     
-    private struct AssociatedKeys {
-        static var ToastTaskName = "ttk_ToastTaskKey"
+//    private struct AssociatedKeys {
+//        static var ToastFuncChange = "tfc_TostFuncChange"
+//    }
+//    
+//    private var isChange:Bool {
+//        set {
+//            objc_setAssociatedObject(self, &AssociatedKeys.ToastFuncChange, NSNumber(bool: newValue), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+//        }
+//        get {
+//            if let value = objc_getAssociatedObject(self, &AssociatedKeys.ToastFuncChange) as? NSNumber {
+//                return value.boolValue
+//            }
+//            return false
+//        }
+//    }
+//    
+//    func changeViewDidDisappear(task:Toast.Task) {
+//        //objc_sync_enter(self)
+//
+//        if !isChange {
+//
+//            // 第一次进入时 交换 viewWillDisappear 函数
+//            let viewDidDisappearMethod = class_getInstanceMethod(object_getClass(self), Selector("viewDidDisappear:"))
+//            
+//            //let toastDidDisappearMethod = class_getInstanceMethod(object_getClass(self), Selector("toastDidDisappear:"))
+//            
+//            method_exchangeImplementations(viewDidDisappearMethod, Toast.toastDidDisappearMethod)
+//            
+//            print("已替换 self=\(self)")
+//
+//            
+//        }
+//        
+//        //objc_sync_exit(self)
+//    }
+ 
+    func __selfDidDisappear(animated: Bool) {
+        print("此方法用于回调原 ViewController 的 viewDidDisappear 函数指针被替换")
     }
     
-    private var toastTasks:NSMutableArray {
-        set(tasks) {
-            objc_setAssociatedObject(self, &AssociatedKeys.ToastTaskName, tasks, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        }
-        get {
-            if let tasks = objc_getAssociatedObject(self, &AssociatedKeys.ToastTaskName) as? NSMutableArray {
-                return tasks
-            }
-            let tasks:NSMutableArray = []
-            objc_setAssociatedObject(self, &AssociatedKeys.ToastTaskName, tasks, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-            return tasks
-        }
-    }
-    
-    func addToastTask(task:Toast.Task) {
-        if toastTasks.count == 0 {
-            // 第一次进入时 交换 viewWillDisappear 函数
-            let viewDidDisappearMethod = class_getInstanceMethod(object_getClass(self), Selector("viewDidDisappear:"))
-            let toastDidDisappearMethod = class_getInstanceMethod(object_getClass(self), Selector("toastDidDisappear:"))
-            
-            method_exchangeImplementations(viewDidDisappearMethod, toastDidDisappearMethod)
-
-            print("已替换")
-        }
-        toastTasks.addObject(task)
-    }
-    
-    func removeToastTask(task:Toast.Task) {
-        let index = toastTasks.indexOfObject(task)
-        if index != NSNotFound  {
-            toastTasks.removeObjectAtIndex(index)
-        }
-    }
-    
-    func toastDidDisappear(animated: Bool) {
-        print("viewDidDisappear Toast")
-        self.toastDidDisappear(animated) // 回调原 viewWillDisappear
+    final func taskDidDisappear(animated: Bool) {
+        self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
         
+        //print("已还原 self=\(self)")
         // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
-        for task:AnyObject in toastTasks {
-            (task as! Toast.Task).hide()
+        for task in Toast.taskFilterWithController(self) {
+            task.hideLater()
         }
-        toastTasks = []
         Toast.animateTasks()
 
-        let viewDidDisappearMethod = class_getInstanceMethod(object_getClass(self), Selector("viewDidDisappear:"))
-        let toastDidDisappearMethod = class_getInstanceMethod(object_getClass(self), Selector("toastDidDisappear:"))
-        
-        method_exchangeImplementations(viewDidDisappearMethod, toastDidDisappearMethod)
     }
+    
+//    final func hasViewController(viewController:UIViewController?) -> Bool {
+//        if let controller = viewController {
+//            if self.isEqual(controller) { return true }
+//            for childController in self.childViewControllers {
+//                if childController.hasViewController(controller) { return true }
+//            }
+//        }
+//        return false
+//    }
 }

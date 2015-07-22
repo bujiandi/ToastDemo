@@ -25,8 +25,9 @@ class ViewController: UIViewController {
         Toast.makeText(self, message: "Toast \(++index)", duration: 3).show()
     }
 
-    override func viewWillDisappear(animated: Bool) {
-        print("viewWillDisappear View")
+    override func viewDidDisappear(animated: Bool) {
+        //super.viewWillDisappear(animated)
+        print("viewDidDisappear View")
     }
 }
 
