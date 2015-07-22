@@ -20,37 +20,43 @@ func ==(lhs: Toast.Task, rhs: Toast.Task) -> Bool {
 
 struct Toast {
     
+    static var interval:CGFloat = 5     // 默认 Toast.Task 间隔
     
-    
-    static var interval:CGFloat = 5
-    // 即将显示的视图及控制器队列
-    static var threadQueue = NSOperationQueue()
-    
-    static var tasksQueue:[Task] = []
-    static var cleanQueue:[Task] = []
+    static var tasksQueue:[Task] = []   // 显示 Toast.Task 队列
+    static var cleanQueue:[Task] = []   // 移除 Toast.Task 队列
     static var activityTask:ActivityTask? = nil
     
     static func makeActivity(controller:UIViewController, message:String) -> ActivityTask {
         let task = ActivityTask(controller: controller, message: message)
-        task.duration = 300000
+        //task.duration = 300000
         
         return task
     }
     
     static func makeText(controller:UIViewController, message:String, duration: NSTimeInterval) -> Task {
         
+        let insets = UIEdgeInsets(top: 2, left: 10, bottom: 2, right: 10)
+        
         let label:UILabel = UILabel()
         label.font = UIFont.systemFontOfSize(13)
         label.numberOfLines = 0
-        label.text = "  \(message)  "
+        label.text = message
         label.textColor = UIColor.whiteColor()
-        label.backgroundColor = UIColor(white: 0.2, alpha: 0.8)
-        label.layoutMargins = UIEdgeInsets(top: 2, left: 15, bottom: 2, right: 15)
+        label.layoutMargins = insets
         label.sizeToFit()
-        label.layer.masksToBounds = true
-        label.layer.cornerRadius = label.frame.height / 2
+        label.frame.origin = CGPoint(x: insets.left, y: insets.top)
+        
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: label.frame.width + insets.left + insets.right, height: label.frame.height + insets.top + insets.bottom))
+        
+        view.clipsToBounds = true
+        view.backgroundColor = UIColor(white: 0.2, alpha: 0.8)
+        view.layer.cornerRadius = view.frame.height / 2
+        view.layer.shadowColor = UIColor.blackColor().CGColor
+        view.layer.shadowOpacity = 0.8
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.addSubview(label)
 
-        let task = Task(controller: controller, view:label)
+        let task = Task(controller: controller, view:view)
         task.duration = duration
         
         return task
@@ -101,10 +107,17 @@ struct Toast {
                 size = CGSize(width: side, height: side)
                 offsetY = 0
                 
+                for view in task.view.subviews {
+                    view.hidden = true
+                }
                 // 给未显示的 Toast.Task 补时间
                 if isAfter { tasksQueue[i].dismissTime += minDismissTime - currentTime }
-                print("task i:\(i) time:\(tasksQueue[i].dismissTime)")
+                //print("task i:\(i) time:\(tasksQueue[i].dismissTime)")
 
+            } else {
+                for view in task.view.subviews {
+                    view.hidden = false
+                }
             }
             //print("task i:\(i) x:\(x) y:\(y) offsetY:\(offsetY)")
 
@@ -216,11 +229,15 @@ struct Toast {
             activityView.sizeToFit()
             activityView.startAnimating()
             
-            
             //print("activityView.frame.height:\(activityView.frame.width)")
-            view.backgroundColor = UIColor(white: 0.2, alpha: 0.8)
-            view.layer.masksToBounds = true
+            view.backgroundColor = UIColor(white: 0.2, alpha: 0.6)
+            view.clipsToBounds = true
             view.layer.cornerRadius = 7
+            
+            view.layer.shadowColor = UIColor.blackColor().CGColor
+            view.layer.shadowOpacity = 0.8
+            view.layer.shadowOffset = CGSize(width: 0, height: 2)
+            
             view.frame.size = CGSize(width: max(label.frame.width, activityView.frame.width), height: label.frame.height + activityView.frame.height + Toast.interval * 4)
             
             activityView.frame.origin = CGPoint(x: (view.frame.width - activityView.frame.width) / 2, y: Toast.interval * 2)
