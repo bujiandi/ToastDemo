@@ -15,6 +15,15 @@
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cYl-NF-s4j">
+                                <rect key="frame" x="36" y="96" width="46" height="30"/>
+                                <state key="normal" title="Button"/>
+                                <connections>
+                                    <action selector="onButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="kw9-AA-muv"/>
+                                </connections>
+                            </button>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
                     <navigationItem key="navigationItem" title="View Cpntroller" id="1u7-vm-vNR">
@@ -28,6 +37,39 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1094" y="1016"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="cYE-ii-hs7">
+            <objects>
+                <viewController storyboardIdentifier="TosatViewController" id="e66-z8-iUz" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="M9z-ow-cQY"/>
+                        <viewControllerLayoutGuide type="bottom" id="GQg-hS-5nS"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="eJ6-gV-J3G">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="aDK-Zv-qgg">
+                                <rect key="frame" x="240" y="286" width="121" height="29"/>
+                                <segments>
+                                    <segment title="First"/>
+                                    <segment title="Second"/>
+                                </segments>
+                                <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </segmentedControl>
+                        </subviews>
+                        <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="aDK-Zv-qgg" firstAttribute="centerX" secondItem="eJ6-gV-J3G" secondAttribute="centerX" id="ReB-rx-kJA"/>
+                            <constraint firstItem="aDK-Zv-qgg" firstAttribute="centerY" secondItem="eJ6-gV-J3G" secondAttribute="centerY" id="qvJ-zN-g0T"/>
+                        </constraints>
+                    </view>
+                    <value key="contentSizeForViewInPopover" type="size" width="100" height="100"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="jTT-Db-LAf" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="730" y="1736"/>
         </scene>
         <!--table controller-->
         <scene sceneID="vbh-Pu-51X">
