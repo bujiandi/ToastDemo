@@ -27,11 +27,13 @@ class TableViewController: UITableViewController {
 
     var index:Int = 0
     @IBAction func onToast(sender:AnyObject!) {
-        if let activityToast = Toast.activityTask {
-            activityToast.hide()
-        } else {
-            Toast.makeActivity(self, message: "activity view is show").show()
-        }
+        Toast.makeActivity(self, message: "activity view \(++index)").show()
+
+//        if let activityToast = Toast.activityTask {
+//            activityToast.hide()
+//        } else {
+//            Toast.makeActivity(self, message: "activity view is show").show()
+//        }
         
         //Toast.makeText(self, message: "Toast \(++index)", duration: 3).show()
 

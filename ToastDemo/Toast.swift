@@ -33,7 +33,13 @@ struct Toast {
     
     static var tasksQueue:[Task] = []   // 显示 Toast.Task 队列
     static var cleanQueue:[Task] = []   // 移除 Toast.Task 队列
-    static var activityTask:ActivityTask? = nil
+    static var activityTask:ActivityTask? = nil {
+        willSet {
+            if let task = activityTask {
+                if task != newValue { cleanQueue.append(task) }
+            }
+        }
+    }
     
     /// 显示活动等待视图
     static func makeActivity(controller:UIViewController, message:String) -> ActivityTask {
@@ -297,7 +303,7 @@ struct Toast {
             let view = UIView()
             
             label = UILabel()
-            label.font = UIFont.systemFontOfSize(13)
+            label.font = UIFont.systemFontOfSize(Toast.fontSize)
             label.numberOfLines = 1
             label.text = "  \(message)  "
             label.textColor = UIColor.whiteColor()
@@ -407,7 +413,7 @@ extension UIViewController {
     final func taskDidDisappear(animated: Bool) {
         self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
         
-        //print("已还原 self=\(self)")
+        print("已还原 self=\(self)")
         // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
         for task in Toast.taskFilterWithController(self) {
             task.hideLater()
