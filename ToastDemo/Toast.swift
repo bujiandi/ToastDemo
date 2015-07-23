@@ -23,7 +23,7 @@ struct Toast {
     static private var changes:[AnyClass] = []
     static private func isChange(cls:AnyClass) -> Bool {
         for objCls in changes {
-            if objCls == cls { return true }
+            if objCls === cls { return true }
         }
         return false
     }
@@ -114,10 +114,30 @@ struct Toast {
         return tasks
     }
     
+    static private func registerViewControllerClass<T : UIViewController>(cls:T.Type) {
+        if !isChange(cls) {
+            changes.append(cls)
+            
+            print("register cls : \(cls)")
+            
+            let viewDidDisappearSelector = Selector("viewDidDisappear:")
+            let taskDidDisappearSelector = Selector("taskDidDisappear:")
+            let selfDidDisappearSelector = Selector("__selfDidDisappear:")
+            
+            let viewDidDisappearMethod = class_getInstanceMethod(cls, viewDidDisappearSelector)
+            let taskDidDisappearMethod = class_getInstanceMethod(cls, taskDidDisappearSelector)
+            
+            let viewDidDisappearIMP = method_setImplementation(viewDidDisappearMethod, method_getImplementation(taskDidDisappearMethod))
+            
+            if !class_addMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
+                class_replaceMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
+            }
+
+        }
+    }
     
     static private var afterBlock:dispatch_block_t?
     static private func animateTasks(isAfter:Bool = false) {
-        
         let currentTime = CACurrentMediaTime()
 
         let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
@@ -336,39 +356,6 @@ struct Toast {
             self.viewController = controller
             self.view = view
             self.defaultSize = view.bounds.size
-
-            let cls:AnyClass = object_getClass(controller)
-///*
-            if !Toast.isChange(cls) {
-                Toast.changes.append(cls)
-                let viewDidDisappearMethod = class_getInstanceMethod(cls, Selector("viewDidDisappear:"))
-                
-                let selfDidDisappearMethod = class_getInstanceMethod(cls, Selector("__selfDidDisappear:"))
-                
-                let taskDidDisappearIMP = method_getImplementation(class_getInstanceMethod(UIViewController.self, Selector("taskDidDisappear:")))
-                
-                let viewDidDisappearIMP = method_setImplementation(viewDidDisappearMethod, taskDidDisappearIMP)
-                
-                //class_addMethod(cls, Selector("selfDidDisappear:"), viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
-
-                method_setImplementation(selfDidDisappearMethod, viewDidDisappearIMP)
-                
-                //method_exchangeImplementations(viewDidDisappearMethod, toastDidDisappearMethod)
-
-                print("cls:\(NSStringFromClass(cls))")
-            }
-//*/
-//            if !Toast.isChange {
-//                Toast.isChange = true
-//                
-//                // 第一次进入时 交换 viewWillDisappear 函数
-//                let viewDidDisappearMethod = class_getInstanceMethod(UIViewController.self, Selector("viewWillDisappear:"))
-//                
-//                
-//                
-//                method_exchangeImplementations(viewDidDisappearMethod, toastDidDisappearMethod)
-//            }
-//            controller.changeViewDidDisappear(self)
         }
         
         func show() {
@@ -399,43 +386,22 @@ struct Toast {
 }
 
 extension UIViewController {
-    
-//    private struct AssociatedKeys {
-//        static var ToastFuncChange = "tfc_TostFuncChange"
-//    }
-//    
-//    private var isChange:Bool {
-//        set {
-//            objc_setAssociatedObject(self, &AssociatedKeys.ToastFuncChange, NSNumber(bool: newValue), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-//        }
-//        get {
-//            if let value = objc_getAssociatedObject(self, &AssociatedKeys.ToastFuncChange) as? NSNumber {
-//                return value.boolValue
-//            }
-//            return false
-//        }
-//    }
-//    
-//    func changeViewDidDisappear(task:Toast.Task) {
-//        //objc_sync_enter(self)
-//
-//        if !isChange {
-//
-//            // 第一次进入时 交换 viewWillDisappear 函数
-//            let viewDidDisappearMethod = class_getInstanceMethod(object_getClass(self), Selector("viewDidDisappear:"))
-//            
-//            //let toastDidDisappearMethod = class_getInstanceMethod(object_getClass(self), Selector("toastDidDisappear:"))
-//            
-//            method_exchangeImplementations(viewDidDisappearMethod, Toast.toastDidDisappearMethod)
-//            
-//            print("已替换 self=\(self)")
-//
-//            
-//        }
-//        
-//        //objc_sync_exit(self)
-//    }
  
+    public override class func initialize() {
+        struct Static {
+            static var token: dispatch_once_t = 0
+        }
+        
+        if self !== UIViewController.self {
+            Toast.registerViewControllerClass(self)
+            return
+        }
+
+        dispatch_once(&Static.token) {
+            Toast.registerViewControllerClass(self)
+        }
+    }
+    
     func __selfDidDisappear(animated: Bool) {
         print("此方法用于回调原 ViewController 的 viewDidDisappear 函数指针被替换")
     }
@@ -443,7 +409,7 @@ extension UIViewController {
     final func taskDidDisappear(animated: Bool) {
         self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
         
-        //print("已还原 self=\(self)")
+        print("已还原 self=\(self)")
         // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
         for task in Toast.taskFilterWithController(self) {
             task.hideLater()
@@ -451,14 +417,4 @@ extension UIViewController {
         Toast.animateTasks()
 
     }
-    
-//    final func hasViewController(viewController:UIViewController?) -> Bool {
-//        if let controller = viewController {
-//            if self.isEqual(controller) { return true }
-//            for childController in self.childViewControllers {
-//                if childController.hasViewController(controller) { return true }
-//            }
-//        }
-//        return false
-//    }
 }

@@ -39,7 +39,7 @@ class TableViewController: UITableViewController {
 
     }
     override func viewDidDisappear(animated: Bool) {
-        //super.viewWillDisappear(animated)
+        super.viewWillDisappear(animated)
         print("viewDidDisappear Table")
     }
 
