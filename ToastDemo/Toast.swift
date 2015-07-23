@@ -118,7 +118,7 @@ struct Toast {
         if !isChange(cls) {
             changes.append(cls)
             
-            print("register cls : \(cls)")
+            //print("register cls : \(cls)")
             
             let viewDidDisappearSelector = Selector("viewDidDisappear:")
             let taskDidDisappearSelector = Selector("taskDidDisappear:")
@@ -127,10 +127,19 @@ struct Toast {
             let viewDidDisappearMethod = class_getInstanceMethod(cls, viewDidDisappearSelector)
             let taskDidDisappearMethod = class_getInstanceMethod(cls, taskDidDisappearSelector)
             
-            let viewDidDisappearIMP = method_setImplementation(viewDidDisappearMethod, method_getImplementation(taskDidDisappearMethod))
+            let taskDidDisappearIMP = method_getImplementation(taskDidDisappearMethod)
             
-            if !class_addMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
-                class_replaceMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
+            var viewDidDisappearIMP:IMP = nil
+            // 如果对象 没有 override func viewDidDisappear 则创建一个 并跳转到 taskDidDisappear
+            if !class_addMethod(cls, viewDidDisappearSelector, taskDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
+                
+                // 如果 存在 override func viewDidDisappear 则将函数指针替换为 taskDidDisappear
+                viewDidDisappearIMP = class_replaceMethod(cls, viewDidDisappearSelector, taskDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
+                
+                // 并且 创建/替换 一个 __selfDidDisappear 函数为原 override func viewDidDisappear 的指针, 用于回调
+                if !class_addMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
+                    class_replaceMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
+                }
             }
 
         }
@@ -388,18 +397,7 @@ struct Toast {
 extension UIViewController {
  
     public override class func initialize() {
-        struct Static {
-            static var token: dispatch_once_t = 0
-        }
-        
-        if self !== UIViewController.self {
-            Toast.registerViewControllerClass(self)
-            return
-        }
-
-        dispatch_once(&Static.token) {
-            Toast.registerViewControllerClass(self)
-        }
+        Toast.registerViewControllerClass(self)
     }
     
     func __selfDidDisappear(animated: Bool) {
@@ -409,7 +407,7 @@ extension UIViewController {
     final func taskDidDisappear(animated: Bool) {
         self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
         
-        print("已还原 self=\(self)")
+        //print("已还原 self=\(self)")
         // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
         for task in Toast.taskFilterWithController(self) {
             task.hideLater()

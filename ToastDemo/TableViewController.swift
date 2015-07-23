@@ -27,21 +27,19 @@ class TableViewController: UITableViewController {
 
     var index:Int = 0
     @IBAction func onToast(sender:AnyObject!) {
-        //Toast.makeText(self, message: "Toast 1", duration: 5).show()
+        if let activityToast = Toast.activityTask {
+            activityToast.hide()
+        } else {
+            Toast.makeActivity(self, message: "activity view is show").show()
+        }
         
-//        if let activityToast = Toast.activityTask {
-//            activityToast.hide()
-//        } else {
-//            Toast.makeActivity(self, message: "activity view is show").show()
-//        }
-        
-        Toast.makeText(self, message: "Toast \(++index)", duration: 3).show()
+        //Toast.makeText(self, message: "Toast \(++index)", duration: 3).show()
 
     }
-    override func viewDidDisappear(animated: Bool) {
-        super.viewWillDisappear(animated)
-        print("viewDidDisappear Table")
-    }
+//    override func viewDidDisappear(animated: Bool) {
+//        super.viewWillDisappear(animated)
+//        print("viewDidDisappear Table")
+//    }
 
 
     /*
