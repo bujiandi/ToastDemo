@@ -18,6 +18,26 @@ public func ==(lhs: Toast.Task, rhs: Toast.Task) -> Bool {
     return lhs.view == rhs.view
 }
 
+public enum ToastNotificationStyle {
+    case TopNone (NSTimeInterval)
+    case BottomNone (NSTimeInterval)
+    case TopModal
+    case BottomModal
+    
+    public var isModal:Bool {
+        switch self {
+        case .TopModal, .BottomModal: return true
+        default: return false
+        }
+    }
+    public var isTop:Bool {
+        switch self {
+        case .TopModal, .TopNone: return true
+        default: return false
+        }
+    }
+}
+
 public struct Toast {
     
     static private var changes:[AnyClass] = []
@@ -39,6 +59,26 @@ public struct Toast {
                 if task != newValue { cleanQueue.append(task) }
             }
         }
+    }
+    static public var notificationTask:NotificationTask? = nil {
+        willSet {
+            if let task = notificationTask {
+                if task != newValue {
+                    task.modalView?.removeFromSuperview()
+                    cleanQueue.append(task)
+                }
+            }
+        }
+    }
+    
+    static public func makeNotification(controller:UIViewController, message:String, mode:ToastNotificationStyle = .TopModal) -> NotificationTask {
+        return makeNotification(controller, view: makeLabel(message), mode: mode)
+    }
+    
+    static public func makeNotification(controller:UIViewController, view:UIView, mode:ToastNotificationStyle = .TopModal) -> NotificationTask {
+        let notification = NotificationTask(controller: controller, view: view)
+        
+        return notification
     }
     
     /// 显示活动等待视图
@@ -93,11 +133,15 @@ public struct Toast {
     
     /// 显示文本通知视图
     static public func makeText(controller:UIViewController, message:String, duration: NSTimeInterval = 8) -> Task {
-        
+        return makeView(controller, childView: makeLabel(message), duration: duration)
+    }
+    
+    // 根据文本内容创建 UILabel
+    static private func makeLabel(message:String) -> UILabel {
         let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
         let insets = UIEdgeInsets(top: 2, left: 10, bottom: 2, right: 10)
         let screenWidth = screenSize.width - insets.left - insets.right
-
+        
         let label:UILabel = UILabel()
         label.font = UIFont.systemFontOfSize(Toast.fontSize)
         label.numberOfLines = 3
@@ -106,11 +150,11 @@ public struct Toast {
         label.layoutMargins = insets
         //label.sizeToFit()
         let size = label.sizeThatFits(CGSize(width: screenWidth, height: label.font.lineHeight * CGFloat(label.numberOfLines)))
-
+        
         //label.frame.origin = CGPoint(x: insets.left, y: insets.top)
         label.frame.size = size
- 
-        return makeView(controller, childView: label, duration: duration)
+
+        return label
     }
     
     static private func taskFilterWithController(controller:UIViewController) -> [Task] {
@@ -255,6 +299,25 @@ public struct Toast {
 
         }
         
+        if let task = notificationTask {
+            if task.view.superview == nil {
+                
+                task.frame = task.view.frame
+                task.view.frame.origin.y = task.mode.isTop ? -task.frame.height : screenSize.height
+                UIApplication.sharedApplication().keyWindow?.addSubview(task.view)
+
+                if task.mode.isModal {
+                    let view = UIView(frame: CGRect(origin: CGPoint.zeroPoint, size: screenSize))
+                    let tap = UITapGestureRecognizer(target: task, action: Selector("hide:"))
+                    var swipe = UISwipeGestureRecognizer(target: task, action: Selector("hide:"))
+                    swipe = [.Up, .Down]
+                    UIApplication.sharedApplication().keyWindow?.insertSubview(view, belowSubview: task.view)
+                } else {
+                    
+                }
+            }
+        }
+        
         if let task = activityTask {
             
             let size = task.view.frame.size
@@ -329,6 +392,52 @@ public struct Toast {
 //        CFAbsoluteTimeGetCurrent()
     }
     
+    public class NotificationTask : Task {
+        
+        let mode: ToastNotificationStyle
+        weak var modalView:UIView?
+        
+        public init(controller: UIViewController, view: UIView, mode: ToastNotificationStyle = .TopModal) {
+            self.mode = mode
+            
+            let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
+            
+            let insets = view.layoutMargins
+            let height = view.bounds.height + insets.top + insets.bottom
+            let y = screenSize.height - height
+            
+            view.frame.size.width = screenSize.width - insets.left - insets.right
+            view.frame.origin = CGPoint(x: insets.left, y: mode.isTop ? insets.top : y - insets.bottom)
+            super.init(controller: controller, view: view)
+            
+            switch mode {
+            case .TopNone(let duration) : self.duration = duration
+            case .BottomNone(let duration) : self.duration = duration
+            default: break
+            }
+        }
+        
+        public override func show() {
+            Toast.notificationTask = self
+            Toast.animateTasks()
+        }
+        
+        public override func hide() {
+            hideLater()
+            Toast.animateTasks()
+        }
+        
+        public override func hideLater() {
+            modalView?.removeFromSuperview()
+            Toast.notificationTask = nil
+        }
+        
+        public func hide(gesture:UIGestureRecognizer!) {
+            hide()
+        }
+        
+    }
+    
     public class ActivityTask : Task {
         
         public var activityView:UIActivityIndicatorView
@@ -377,7 +486,6 @@ public struct Toast {
         }
         
         override public func show() {
-            hideLater()
             Toast.activityTask = self
             Toast.animateTasks()
         }
@@ -388,10 +496,7 @@ public struct Toast {
         }
         
         override public func hideLater() {
-            if let currentTask = Toast.activityTask {
-                Toast.cleanQueue.append(currentTask)
-                Toast.activityTask = nil
-            }
+            Toast.activityTask = nil
         }
     }
     
