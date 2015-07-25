@@ -18,21 +18,47 @@ public func ==(lhs: Toast.Task, rhs: Toast.Task) -> Bool {
     return lhs.view == rhs.view
 }
 
+public func ==(lhs: ToastWindowStyle, rhs: ToastWindowStyle) -> Bool {
+    switch (lhs, rhs) {
+    case (.None , .None ): return true
+    case (.Modal, .Modal): return true
+    case (.ModalCanCancel(let lDirection), .ModalCanCancel(let rDirection)):
+        return lDirection == rDirection
+    default: return false
+    }
+}
+
+extension UISwipeGestureRecognizerDirection {
+    static var Tap: UISwipeGestureRecognizerDirection { return UISwipeGestureRecognizerDirection(rawValue: 0) }
+}
+
+public enum ToastWindowStyle : Equatable {
+    case None, Modal, ModalCanCancel (UISwipeGestureRecognizerDirection)
+    var isModal:Bool { return self != .None }
+}
+
 public enum ToastNotificationStyle {
-    case TopNone (NSTimeInterval)
-    case BottomNone (NSTimeInterval)
-    case TopModal
-    case BottomModal
+    case TopNormal (NSTimeInterval)
+    case BottomNormal (NSTimeInterval)
+    case TopModalCanCancel (Bool)
+    case BottomModalCanCancel (Bool)
     
     public var isModal:Bool {
         switch self {
-        case .TopModal, .BottomModal: return true
+        case .TopModalCanCancel, .BottomModalCanCancel: return true
         default: return false
         }
     }
     public var isTop:Bool {
         switch self {
-        case .TopModal, .TopNone: return true
+        case .TopModalCanCancel, .TopNormal: return true
+        default: return false
+        }
+    }
+    public var canCancel:Bool {
+        switch self {
+        case .TopModalCanCancel(let canCancel): return canCancel
+        case .BottomModalCanCancel(let canCancel): return canCancel
         default: return false
         }
     }
@@ -60,6 +86,13 @@ public struct Toast {
             }
         }
     }
+    static public var windowTask:WindowTask? = nil {
+        willSet {
+            if let task = windowTask {
+                if task != newValue { cleanQueue.append(task) }
+            }
+        }
+    }
     static public var notificationTask:NotificationTask? = nil {
         willSet {
             if let task = notificationTask {
@@ -70,12 +103,27 @@ public struct Toast {
             }
         }
     }
-    
-    static public func makeNotification(controller:UIViewController, message:String, mode:ToastNotificationStyle = .TopModal) -> NotificationTask {
-        return makeNotification(controller, view: makeLabel(message), mode: mode)
+    static private var _overlayWindow:UIWindow? = nil
+    static private var overlayWindow:UIWindow {
+        
+        if _overlayWindow == nil {
+            let window = UIWindow(frame: UIApplication.sharedApplication().keyWindow?.frame ?? UIScreen.mainScreen().bounds)
+            window.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+            window.userInteractionEnabled = true    // 支持手势
+            window.windowLevel = UIWindowLevelStatusBar
+            window.transform = UIApplication.sharedApplication().keyWindow?.transform ?? CGAffineTransformIdentity
+            _overlayWindow = window
+        }
+        return _overlayWindow!
     }
     
-    static public func makeNotification(controller:UIViewController, view:UIView, mode:ToastNotificationStyle = .TopModal) -> NotificationTask {
+    static public func makeNotification(controller:UIViewController, message:String, mode:ToastNotificationStyle = .TopModalCanCancel(true)) -> NotificationTask {
+        let label = makeLabel(message)
+        label.backgroundColor = UIColor.darkGrayColor()
+        return makeNotification(controller, view: label, mode: mode)
+    }
+    
+    static public func makeNotification(controller:UIViewController, view:UIView, mode:ToastNotificationStyle = .TopModalCanCancel(true)) -> NotificationTask {
         let notification = NotificationTask(controller: controller, view: view)
         
         return notification
@@ -308,9 +356,14 @@ public struct Toast {
 
                 if task.mode.isModal {
                     let view = UIView(frame: CGRect(origin: CGPoint.zeroPoint, size: screenSize))
+                    view.alpha = 0
+                    view.backgroundColor = UIColor(white: 0.2, alpha: 0.6)
                     let tap = UITapGestureRecognizer(target: task, action: Selector("hide:"))
-                    var swipe = UISwipeGestureRecognizer(target: task, action: Selector("hide:"))
-                    swipe = [.Up, .Down]
+                    let swipe = UISwipeGestureRecognizer(target: task, action: Selector("hide:"))
+                    swipe.direction = [.Up, .Down]
+                    view.addGestureRecognizer(tap)
+                    view.addGestureRecognizer(swipe)
+                    task.modalView = view
                     UIApplication.sharedApplication().keyWindow?.insertSubview(view, belowSubview: task.view)
                 } else {
                     
@@ -345,6 +398,11 @@ public struct Toast {
         
         UIView.animateWithDuration(0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveLinear, animations: {
             
+            if let task = notificationTask {
+                task.modalView?.alpha = task.alpha
+                task.view.alpha = task.alpha
+                task.view.frame = task.frame
+            }
             // 显示活动状态 Activity
             if let task = activityTask {
                 task.view.alpha = task.alpha
@@ -397,7 +455,7 @@ public struct Toast {
         let mode: ToastNotificationStyle
         weak var modalView:UIView?
         
-        public init(controller: UIViewController, view: UIView, mode: ToastNotificationStyle = .TopModal) {
+        public init(controller: UIViewController, view: UIView, mode: ToastNotificationStyle = .TopModalCanCancel(true)) {
             self.mode = mode
             
             let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
@@ -411,8 +469,8 @@ public struct Toast {
             super.init(controller: controller, view: view)
             
             switch mode {
-            case .TopNone(let duration) : self.duration = duration
-            case .BottomNone(let duration) : self.duration = duration
+            case .TopNormal(let duration) : self.duration = duration
+            case .BottomNormal(let duration) : self.duration = duration
             default: break
             }
         }
@@ -432,10 +490,40 @@ public struct Toast {
             Toast.notificationTask = nil
         }
         
-        public func hide(gesture:UIGestureRecognizer!) {
+        @objc public func hide(gesture:UIGestureRecognizer!) {
             hide()
         }
         
+    }
+    
+    
+    public class WindowTask : Task {
+        
+        private var style:ToastWindowStyle = ToastWindowStyle.None
+        public init(controller: UIViewController, view: UIView, style:ToastWindowStyle = ToastWindowStyle.None) {
+            self.style = style
+            
+            super.init(controller: controller, view: view)
+        }
+        
+        public override func show() {
+            Toast.windowTask = self
+            Toast.animateTasks()
+        }
+        
+        public override func hide() {
+            hideLater()
+            Toast.animateTasks()
+        }
+        
+        public override func hideLater() {
+            Toast._overlayWindow?.hidden = false
+            Toast.windowTask = nil
+        }
+        
+        @objc public func hide(gesture:UIGestureRecognizer!) {
+            hide()
+        }
     }
     
     public class ActivityTask : Task {

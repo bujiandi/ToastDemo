@@ -27,7 +27,8 @@ class TableViewController: UITableViewController {
 
     var index:Int = 0
     @IBAction func onToast(sender:AnyObject!) {
-        Toast.makeActivity(self, message: "activity view \(++index)").show()
+        //Toast.makeActivity(self, message: "activity view \(++index)").show()
+        Toast.makeNotification(self, message: "is to later").show()
 
 //        if let activityToast = Toast.activityTask {
 //            activityToast.hide()
