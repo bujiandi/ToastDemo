@@ -8,37 +8,47 @@
 
 import UIKit
 
-enum UITextBoxContentType {
-    case AnyChar
-    case Number
-    case Integer
-    case EMail
-    case Phone
-    case Telephone
-    case MobilePhone
-    case CustomType
-}
+//enum UITextBoxContentType {
+//    case AnyChar
+//    case Number
+//    case Integer
+//    case EMail
+//    case Phone
+//    case Telephone
+//    case MobilePhone
+//    case CustomType
+//}
 
 
-enum UITextBoxHighlightState:UInt32 {
-    case Default    = 0xEEF7FF  // 淡蓝色
-    case Validator  = 0xEEFFEE  // 淡绿色
-    case Warning    = 0xFFFFCC  // 淡黄色
-    case Wrong      = 0xFFEEEE  // 淡红色
+enum UITextBoxHighlightState {
+    case Default
+    case Validator  (String)    // 状态提示文字
+    case Warning    (String)    // 状态提示文字
+    case Wrong      (String)    // 状态提示文字
 }
 
 @IBDesignable
 
 class UITextBox: UITextField {
     
-    @IBInspectable var wrongColor:UIColor = UIColor(number: UITextBoxHighlightState.Wrong.rawValue)
-    @IBInspectable var warningColor:UIColor = UIColor(number: UITextBoxHighlightState.Warning.rawValue)
-    @IBInspectable var validatorColor:UIColor = UIColor(number: UITextBoxHighlightState.Validator.rawValue)
-    @IBInspectable var highlightColor:UIColor = UIColor(number: UITextBoxHighlightState.Default.rawValue)
+    @IBInspectable var wrongColor:UIColor       = UIColor(number: 0xFFEEEE) // 淡红色
+    @IBInspectable var warningColor:UIColor     = UIColor(number: 0xFFFFCC) // 淡黄色
+    @IBInspectable var validatorColor:UIColor   = UIColor(number: 0xEEFFEE) // 淡绿色
+    @IBInspectable var highlightColor:UIColor   = UIColor(number: 0xEEF7FF) // 淡蓝色
     
     @IBInspectable var animateDuration:CGFloat = 0.4
-    weak var placeholderLabel:UILabel!
+    weak var placeholderLabel:UILabel?
     
+    @NSCopying private var _backgroundColor: UIColor? = nil
+    override var backgroundColor: UIColor? {
+        set {
+            _backgroundColor = newValue
+            super.backgroundColor = self.getHighlightColor(self.highlightState)
+        }
+        get {
+            return _backgroundColor
+        }
+    }
     override var attributedPlaceholder: NSAttributedString? {
     didSet {
         if let label = placeholderLabel {
@@ -47,7 +57,7 @@ class UITextBox: UITextField {
         }
     }
     }
-    override var placeholder:String! {
+    override var placeholder:String? {
     didSet {
         if let label = placeholderLabel {
             label.text = super.placeholder
@@ -57,34 +67,55 @@ class UITextBox: UITextField {
     }
     
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        self.addTarget(self, action: Selector("editingChanged"), forControlEvents: UIControlEvents.EditingChanged);
+    private var _highlightState:UITextBoxHighlightState {
+        return text == nil || text == "" ? .Default : highlightState
+    }
+    var highlightState:UITextBoxHighlightState = .Default {
+    didSet {
+        if let label = placeholderLabel {
+            setHighlightText(label, state: _highlightState)
+            self.layoutSubviews()
+        }
+        UIView.animateWithDuration(NSTimeInterval(animateDuration)) {
+            super.backgroundColor = self.getHighlightColor(self._highlightState)
+            
+        }
+    }
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-        self.addTarget(self, action: Selector("editingChanged"), forControlEvents: UIControlEvents.EditingChanged);
-    }
     
-    func editingChanged() {
-        print("editingChanged:\(text)")
-    }
+//    override init(frame: CGRect) {
+//        super.init(frame: frame)
+//        self.addTarget(self, action: Selector("editingChanged"), forControlEvents: UIControlEvents.EditingChanged);
+//    }
+//    
+//    required init?(coder aDecoder: NSCoder) {
+//        super.init(coder: aDecoder)
+//        self.addTarget(self, action: Selector("editingChanged"), forControlEvents: UIControlEvents.EditingChanged);
+//    }
+//    
+//    func editingChanged() {
+//        print("editingChanged:\(text)")
+//    }
     
     //获得焦点时高亮动画
     override func becomeFirstResponder() -> Bool {
-        UIView.animateWithDuration(Double(animateDuration)){
-            self.backgroundColor = self.highlightColor
-        }
-        return super.becomeFirstResponder()
+        return animationFirstResponder(super.becomeFirstResponder())
     }
     
     //失去焦点时取消高亮动画
     override func resignFirstResponder() -> Bool {
-        UIView.animateWithDuration(Double(animateDuration)){
-            self.backgroundColor = UIColor.clearColor()
+        return animationFirstResponder(super.resignFirstResponder())
+    }
+    
+    //
+    private func animationFirstResponder(isFirstResponder:Bool) -> Bool {
+        UIView.animateWithDuration(NSTimeInterval(animateDuration)) {
+            let color = self.getHighlightColor(self._highlightState)
+            super.backgroundColor = color
+            self.placeholderLabel?.textColor = self.getTextColorWithHighlightColor(color)
         }
-        return super.resignFirstResponder()
+        return isFirstResponder
     }
     
     
@@ -106,16 +137,15 @@ class UITextBox: UITextField {
         if placeholderLabel == nil {
             let rect = super.placeholderRectForBounds(bounds)
             let label = UILabel(frame: rect)
-            label.text = self.placeholder
-            label.textColor = UIColor(white: 0.7, alpha: 1.0)
             label.font = self.font
+            setHighlightText(label, state: self._highlightState)
             placeholderLabel = label
             self.addSubview(label);
         }
     }
     
     override func removeFromSuperview() {
-        self.placeholderLabel.removeFromSuperview()
+        self.placeholderLabel?.removeFromSuperview()
         self.placeholderLabel = nil
         super.removeFromSuperview()
     }
@@ -130,7 +160,7 @@ class UITextBox: UITextField {
             placeholderLabel = label
             addSubview(label)
         }
-        placeholderLabel.text = self.placeholder
+        setHighlightText(placeholderLabel!, state: self._highlightState)
         layoutPlaceholderLabel(rect,!isFirstResponder())
         return CGRect.zeroRect
     }
@@ -138,31 +168,50 @@ class UITextBox: UITextField {
     
     //布局提示文本
     func layoutPlaceholderLabel(rect: CGRect,_ left: Bool = false) {
-        if let label = placeholderLabel {
-            let size = label.sizeThatFits(bounds.size)
-            if left {
-                UIView.animateWithDuration(Double(animateDuration)){
-                    self.placeholderLabel.frame = rect;
-                }
-            } else {
-                UIView.animateWithDuration(Double(animateDuration)){
-                    let size = self.placeholderLabel.sizeThatFits(self.bounds.size)
-                    var frame = self.placeholderLabel.frame
-                    frame.origin.x = self.bounds.width - size.width - 7.0
-                    frame.size.width = size.width + 7.0
-                    self.placeholderLabel.frame = frame
-                }
-            }
+        guard let label = placeholderLabel else {
+            return
         }
+        let size = label.sizeThatFits(rect.size)
+        let frame = left ? rect : CGRect(x: super.clearButtonRectForBounds(bounds).minX - size.width, y: rect.minY, width: size.width, height: rect.height)
+        UIView.animateWithDuration(NSTimeInterval(animateDuration), delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveLinear, animations: {
+            label.frame = frame;
+        }, completion: nil)
     }
     
-    
+    private func setHighlightText(label:UILabel, state:UITextBoxHighlightState) {
+        switch state {
+        case .Wrong(let errorText):
+            label.textColor = getTextColorWithHighlightColor(wrongColor)
+            label.text = errorText
+        case .Warning(let warningText):
+            label.textColor = getTextColorWithHighlightColor(warningColor)
+            label.text = warningText
+        case .Validator(let validatorText):
+            label.textColor = getTextColorWithHighlightColor(validatorColor)
+            label.text = validatorText
+        default:
+            if let attributedPlaceholder = self.attributedPlaceholder {
+                label.attributedText = attributedPlaceholder
+            } else {
+                label.text = self.placeholder
+            }
+            label.textColor = getTextColorWithHighlightColor(getHighlightColor(_highlightState))
+        }
+    }
+    private func getTextColorWithHighlightColor(color:UIColor) -> UIColor {
+        var r:CGFloat = 0
+        var g:CGFloat = 0
+        var b:CGFloat = 0
+        var a:CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return UIColor(red: r*r*0.7, green: g*g*0.7, blue: b*b*0.7, alpha: a)   // 同类颜色加深一些
+    }
     private func getHighlightColor(state:UITextBoxHighlightState) -> UIColor {
         switch state {
         case .Wrong:        return wrongColor
         case .Warning:      return warningColor
         case .Validator:    return validatorColor
-        default:            return highlightColor
+        default:            return self.isFirstResponder() ? highlightColor : self.backgroundColor ?? UIColor.whiteColor()
         }
     }
     /*
@@ -175,7 +224,6 @@ class UITextBox: UITextField {
     */
 
 }
-
 
 extension UIColor {
     convenience init(number:UInt32) {

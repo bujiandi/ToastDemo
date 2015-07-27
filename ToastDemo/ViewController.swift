@@ -35,12 +35,25 @@ class ViewController: UIViewController {
     }
     
     @IBAction func onButtonClick(sender:AnyObject!) {
-        Toast.makeActivity(self, message: "This is a activity toast").show()
+        switch textBox.highlightState {
+        case .Default:
+            textBox.highlightState = UITextBoxHighlightState.Validator("ok")
+        case .Validator:
+            textBox.highlightState = UITextBoxHighlightState.Warning("warning")
+        case .Warning:
+            textBox.highlightState = UITextBoxHighlightState.Wrong("wrong")
+        case .Wrong:
+            textBox.highlightState = UITextBoxHighlightState.Default
+        }
+        //textBox.highlightState = UITextBoxHighlightState.Validator("ok")
+        //Toast.makeActivity(self, message: "This is a activity toast").show()
 //        if let controller = self.storyboard?.instantiateViewControllerWithIdentifier("TosatViewController") {
 //            controller.view.frame.size = CGSize(width: 100, height: 40)
 //            Toast.makeView(self, toastController: controller).show()
 //        }
     }
+    
+    @IBOutlet var textBox:UITextBox!
 
     override func viewDidDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
