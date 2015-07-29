@@ -15,7 +15,7 @@ import UIKit
 //}
 
 public func ==(lhs: Toast.Task, rhs: Toast.Task) -> Bool {
-    return lhs.view == rhs.view
+    return lhs.view === rhs.view
 }
 
 public func ==(lhs: ToastWindowStyle, rhs: ToastWindowStyle) -> Bool {
@@ -37,33 +37,6 @@ public enum ToastWindowStyle : Equatable {
     var isModal:Bool { return self != .None }
 }
 
-public enum ToastNotificationStyle {
-    case TopNormal (NSTimeInterval)
-    case BottomNormal (NSTimeInterval)
-    case TopModalCanCancel (Bool)
-    case BottomModalCanCancel (Bool)
-    
-    public var isModal:Bool {
-        switch self {
-        case .TopModalCanCancel, .BottomModalCanCancel: return true
-        default: return false
-        }
-    }
-    public var isTop:Bool {
-        switch self {
-        case .TopModalCanCancel, .TopNormal: return true
-        default: return false
-        }
-    }
-    public var canCancel:Bool {
-        switch self {
-        case .TopModalCanCancel(let canCancel): return canCancel
-        case .BottomModalCanCancel(let canCancel): return canCancel
-        default: return false
-        }
-    }
-}
-
 public struct Toast {
     
     static private var changes:[AnyClass] = []
@@ -79,6 +52,7 @@ public struct Toast {
     
     static public var tasksQueue:[Task] = []   // 显示 Toast.Task 队列
     static public var cleanQueue:[Task] = []   // 移除 Toast.Task 队列
+    static public var windowQueue:[WindowTask] = [] // 窗口式 Toast.WindowTask 等待显示队列
     static public var activityTask:ActivityTask? = nil {
         willSet {
             if let task = activityTask {
@@ -90,16 +64,6 @@ public struct Toast {
         willSet {
             if let task = windowTask {
                 if task != newValue { cleanQueue.append(task) }
-            }
-        }
-    }
-    static public var notificationTask:NotificationTask? = nil {
-        willSet {
-            if let task = notificationTask {
-                if task != newValue {
-                    task.modalView?.removeFromSuperview()
-                    cleanQueue.append(task)
-                }
             }
         }
     }
@@ -117,14 +81,28 @@ public struct Toast {
         return _overlayWindow!
     }
     
-    static public func makeNotification(controller:UIViewController, message:String, mode:ToastNotificationStyle = .TopModalCanCancel(true)) -> NotificationTask {
+    static public func makeNotification(controller:UIViewController, message:String, style:ToastWindowStyle = .Modal) -> WindowTask {
         let label = makeLabel(message)
         label.backgroundColor = UIColor.darkGrayColor()
-        return makeNotification(controller, view: label, mode: mode)
+        //label.frame.origin = CGPoint(x: 100, y: 200)
+        return makeNotification(controller, view: label, style: style)
     }
     
-    static public func makeNotification(controller:UIViewController, view:UIView, mode:ToastNotificationStyle = .TopModalCanCancel(true)) -> NotificationTask {
-        let notification = NotificationTask(controller: controller, view: view)
+    static public func makeNotification(controller:UIViewController, view:UIView, style:ToastWindowStyle = .Modal) -> WindowTask {
+        
+        
+        let insets = view.layoutMargins
+        let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
+        let backgroundView = UIView(frame: CGRect(x: 0, y: view.frame.minY, width: screenSize.width, height: view.frame.height + insets.top + insets.bottom))
+
+        view.frame.origin = CGPoint(x: (screenSize.width - view.frame.width) / 2, y: insets.top)
+        backgroundView.addSubview(view)
+        backgroundView.backgroundColor = view.backgroundColor
+        backgroundView.layer.shadowColor = UIColor(white: 0.2, alpha: 1).CGColor
+        backgroundView.layer.shadowOpacity = 0.8
+        backgroundView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        
+        let notification = WindowTask(controller: controller, view: backgroundView, style:style)
         
         return notification
     }
@@ -204,7 +182,12 @@ public struct Toast {
 
         return label
     }
-    
+    static private func indexOfFirstNoneStyleWindowTask() -> Int {
+        for var i:Int = 0; i<windowQueue.count; i++ {
+            if !windowQueue[i].style.isModal { return i }
+        }
+        return 0
+    }
     static private func taskFilterWithController(controller:UIViewController) -> [Task] {
         var tasks:[Task] = []
         
@@ -269,7 +252,7 @@ public struct Toast {
         }
         return minDismissTime - currentTime
     }
-    static private var afterBlock:dispatch_block_t?
+    static private var _afterBlock:dispatch_block_t?
     static private func animateTasks(isAfter:Bool = false) {
         let currentTime = CACurrentMediaTime()
 
@@ -295,6 +278,14 @@ public struct Toast {
             }
         }
         
+        // 计算最小更新时间
+        for task in windowQueue where !task.style.isModal {
+            if minDismissTime > task.dismissTime { minDismissTime = task.dismissTime }
+        }
+        
+        // 下次动画时间 不小于一次动画的间隔
+        let animateTime = max(minDismissTime - currentTime + 0.05, 0.351)
+        
         // 所有需显示的
         for var i:Int = tasksQueue.count - 1; i>=0; i-- {
             let task = tasksQueue[i]
@@ -315,7 +306,7 @@ public struct Toast {
                 
                 // 给未显示的 Toast.Task 补时间
                 if isAfter {
-                    tasksQueue[i].dismissTime += minDismissTime - currentTime
+                    tasksQueue[i].dismissTime += animateTime
                 }
                 
                 // 隐藏 等待状态 Toast.Task 的子视图
@@ -347,6 +338,58 @@ public struct Toast {
 
         }
         
+        // 如果当前显示的 Toast.WindowTask 非模态 则判断其是否超时
+        if let task = windowTask where !task.style.isModal {
+            if currentTime > task.dismissTime {
+                windowTask = windowQueue.count > 0 ? windowQueue.removeAtIndex(0) : nil
+            }
+        }
+        
+        // 给未显示的 Toast.WindowTask 补时
+        if isAfter {
+            for task in windowQueue where !task.style.isModal {
+                task.dismissTime += animateTime
+            }
+        }
+        
+        // 给将显示的 Toast.WindowTask 显示出来
+        if let task = windowTask {
+            if task.view.superview === nil {
+                let window = overlayWindow
+                
+                if task.style.isModal {
+                    window.frame = CGRect(origin: CGPoint.zeroPoint, size: screenSize)
+                    window.backgroundColor = UIColor(white: 0.2, alpha: 0.6)
+                    
+                    if case .ModalCanCancel(let direction) = task.style {
+                        // 如果是可自动终止的
+                        let tap = UITapGestureRecognizer(target: task, action: Selector("hide:"))
+                        let swipe = UISwipeGestureRecognizer(target: task, action: Selector("hide:"))
+                        swipe.direction = direction
+                        window.addGestureRecognizer(tap)
+                        window.addGestureRecognizer(swipe)
+                    }
+
+                    task.frame = task.view.frame
+                    task.view.frame.origin.y -= 30
+                    print("这是模态窗口动画1")
+                } else {
+                    let frame = task.view.frame
+                    window.frame = CGRect(x: frame.minX, y: frame.minY, width: min(frame.width, screenSize.width), height: min(frame.height, screenSize.height))
+                    window.gestureRecognizers = nil
+                    window.backgroundColor = task.view.backgroundColor
+                    task.view.frame.origin = CGPoint(x: (screenSize.width - frame.width) / 2, y: 0)
+                    task.frame = window.frame
+                    window.frame.origin.y -= 30
+                }
+                window.alpha = 0
+                task.alpha = 1
+                window.addSubview(task.view)
+            }
+            _overlayWindow!.hidden = false
+        }
+        
+/*
         if let task = notificationTask {
             if task.view.superview == nil {
                 
@@ -370,7 +413,7 @@ public struct Toast {
                 }
             }
         }
-        
+*/
         if let task = activityTask {
             
             let size = task.view.frame.size
@@ -391,18 +434,31 @@ public struct Toast {
         
         // 将要移除的列表
         for task in cleanQueue {
+            if let windowTask = task as? WindowTask where !windowTask.style.isModal {
+                task.frame = overlayWindow.frame
+                task.frame.origin.y = overlayWindow.frame.minY - overlayWindow.frame.height
+            } else {
+                task.frame = task.view.frame
+                task.frame.origin.y = task.frame.minY - task.frame.height
+            }
             task.alpha = 0
-            task.frame = task.view.frame
-            task.frame.origin.y = task.frame.minY - task.frame.height
         }
         
-        UIView.animateWithDuration(0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveLinear, animations: {
+        UIView.animateWithDuration(0.35, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveLinear, animations: {
             
-            if let task = notificationTask {
-                task.modalView?.alpha = task.alpha
-                task.view.alpha = task.alpha
-                task.view.frame = task.frame
+            if let task = windowTask {
+                if task.style.isModal {
+                    task.view.alpha = task.alpha
+                    task.view.frame = task.frame
+                    print("这是模态窗口动画2 frame:\(task.frame)")
+
+                } else {
+                    task.view.alpha = task.alpha
+                    _overlayWindow?.frame = task.frame
+                }
+                _overlayWindow?.alpha = task.alpha
             }
+            
             // 显示活动状态 Activity
             if let task = activityTask {
                 task.view.alpha = task.alpha
@@ -418,38 +474,56 @@ public struct Toast {
             
             // 对要移除的 Toast.Task 进行动画
             for task:Task in cleanQueue {
-                task.view.alpha = task.alpha
-                task.view.frame = task.frame
+                if let windowTask = task as? WindowTask {
+                    if windowTask.style.isModal {
+                        //_overlayWindow?.alpha = 0
+                        task.view.frame = task.frame
+                    } else {
+                        _overlayWindow?.frame = task.frame
+                    }
+                    _overlayWindow?.alpha = task.alpha
+                } else {
+                    task.view.alpha = task.alpha
+                    task.view.frame = task.frame
+                }
             }
             
         }) { (finish) -> Void in
             // 动画结束时 将移除列表清空
+            var hasWindowTask:Bool = false
             for task in cleanQueue {
+                hasWindowTask = hasWindowTask || task is WindowTask
                 task.view.removeFromSuperview()
                 task.childController?.removeFromParentViewController()
+            }
+            // 如果队列中再无 Toast.WindowTask 则移除窗口
+            if hasWindowTask && windowQueue.count == 0 {
+                _overlayWindow?.hidden = true
+                _overlayWindow?.removeFromSuperview()
+                _overlayWindow = nil
             }
             cleanQueue.removeAll()
         }
         
         // 如果没有延时回调 则计算最小延时回调时间
-        if Toast.afterBlock == nil && minDismissTime > 0 {
+        if _afterBlock == nil && minDismissTime > 0 {
 
-            Toast.afterBlock = {
-                Toast.afterBlock = nil
-                Toast.animateTasks(true)
+            _afterBlock = {
+                _afterBlock = nil
+                animateTasks(true)
             }
             
-            let delay:NSTimeInterval = max(minDismissTime - currentTime + 0.05, 0.31) * Double(NSEC_PER_SEC)
+            let delay:NSTimeInterval = animateTime * Double(NSEC_PER_SEC)
             let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
 
-            dispatch_after(time, dispatch_get_main_queue(), Toast.afterBlock!)
+            dispatch_after(time, dispatch_get_main_queue(), _afterBlock!)
         }
         
 //        CACurrentMediaTime()
 //        mach_absolute_time()
 //        CFAbsoluteTimeGetCurrent()
     }
-    
+/*
     public class NotificationTask : Task {
         
         let mode: ToastNotificationStyle
@@ -495,7 +569,7 @@ public struct Toast {
         }
         
     }
-    
+*/
     
     public class WindowTask : Task {
         
@@ -507,7 +581,31 @@ public struct Toast {
         }
         
         public override func show() {
-            Toast.windowTask = self
+            if style.isModal {
+                // 如果没有模态 Toast.WindowTask 则立即显示本 消息
+                if let task = Toast.windowTask where !task.style.isModal {
+                    Toast.windowTask = self
+                    // 并将没显示完的信息插入队列顶部
+                    if let index = Toast.cleanQueue.indexOf(task) {
+                        Toast.cleanQueue.removeAtIndex(index)
+                    }
+                    Toast.windowQueue.insert(task, atIndex: 0)
+                    // 还原原位置
+                    task.view.frame.origin = Toast.overlayWindow.frame.origin
+                    print("模态窗口通知立即显示")
+                } else if Toast.windowTask !== nil {
+                    // 否则如果有 模态消息通知则加入队列
+                    Toast.windowQueue.insert(self, atIndex: Toast.indexOfFirstNoneStyleWindowTask())
+                    print("模态窗口通知加入队列")
+                } else {
+                    // 如果没有其他消息则立即显示
+                    Toast.windowTask = self
+                    print("模态窗口通知马上显示")
+                }
+            } else {
+                // 非模态信息一律加入队列
+                Toast.windowQueue.append(self)
+            }
             Toast.animateTasks()
         }
         
@@ -517,12 +615,16 @@ public struct Toast {
         }
         
         public override func hideLater() {
-            Toast._overlayWindow?.hidden = false
-            Toast.windowTask = nil
+            if let index = Toast.windowQueue.indexOf(self) {
+                Toast.windowQueue.removeAtIndex(index)
+            }
+            if let task = Toast.windowTask {
+                if self === task { Toast.windowTask = nil }
+            }
         }
         
         @objc public func hide(gesture:UIGestureRecognizer!) {
-            hide()
+            if !self.view.bounds.contains(gesture.locationInView(self.view)) { hide() }
         }
     }
     
