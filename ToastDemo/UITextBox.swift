@@ -113,7 +113,9 @@ class UITextBox: UITextField {
         UIView.animateWithDuration(NSTimeInterval(animateDuration)) {
             let color = self.getHighlightColor(self._highlightState)
             super.backgroundColor = color
-            self.placeholderLabel?.textColor = self.getTextColorWithHighlightColor(color)
+            if let label = self.placeholderLabel {
+                self.setHighlightText(label, state: self._highlightState)
+            }
         }
         return isFirstResponder
     }

@@ -33,7 +33,9 @@ class ViewController: UIViewController {
     @IBAction func onToast(sender:AnyObject!) {
         Toast.makeText(self, message: "Toast \(contents[index++])", duration: 3).show()
     }
-    
+    @IBAction func onNotificationClick(sender:AnyObject!) {
+        Toast.makeNotification(self, message: "notification \(++index)", style: .ModalCanCancel([.Up, .Down])).show()
+    }
     @IBAction func onButtonClick(sender:AnyObject!) {
         switch textBox.highlightState {
         case .Default:
@@ -56,7 +58,7 @@ class ViewController: UIViewController {
     @IBOutlet var textBox:UITextBox!
 
     override func viewDidDisappear(animated: Bool) {
-        super.viewWillDisappear(animated)
+        //super.viewWillDisappear(animated)
         print("viewDidDisappear View")
     }
 }
