@@ -41,6 +41,13 @@
                                     <action selector="onNotificationClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="7Pi-Xg-OQJ"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="A2I-vH-d8f">
+                                <rect key="frame" x="227" y="202" width="46" height="30"/>
+                                <state key="normal" title="Close"/>
+                                <connections>
+                                    <action selector="onClose:" destination="BYZ-38-t0r" eventType="touchUpInside" id="hYT-Br-itN"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
@@ -406,6 +413,75 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dKw-ee-607" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-406" y="1016"/>
+        </scene>
+        <!--view controller-->
+        <scene sceneID="Fp2-oI-isC">
+            <objects>
+                <viewController storyboardIdentifier="LoginController" title="view controller" id="csa-aw-sPY" customClass="ViewController" customModule="ToastDemo" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="RfM-qO-aqr"/>
+                        <viewControllerLayoutGuide type="bottom" id="qjB-v7-OhS"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="B62-Ot-Kg1">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="11" borderStyle="roundedRect" placeholder="user name" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="oUQ-eM-4jm" customClass="UITextBox" customModule="ToastDemo" customModuleProvider="target">
+                                <rect key="frame" x="20" y="66" width="560" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="pass word" clearsOnBeginEditing="YES" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="9yz-qJ-iQm" customClass="UITextBox" customModule="ToastDemo" customModuleProvider="target">
+                                <rect key="frame" x="20" y="120" width="560" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" secureTextEntry="YES"/>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7pl-qo-Owb">
+                                <rect key="frame" x="20" y="202" width="46" height="30"/>
+                                <state key="normal" title="Button"/>
+                                <connections>
+                                    <action selector="onButtonClick:" destination="csa-aw-sPY" eventType="touchUpInside" id="2Wr-ce-FEF"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="a8m-30-TVi">
+                                <rect key="frame" x="108" y="202" width="79" height="30"/>
+                                <state key="normal" title="Notification"/>
+                                <connections>
+                                    <action selector="onNotificationClick:" destination="csa-aw-sPY" eventType="touchUpInside" id="gqh-xe-EF0"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6Db-ZM-OgH">
+                                <rect key="frame" x="227" y="202" width="46" height="30"/>
+                                <state key="normal" title="Close"/>
+                                <connections>
+                                    <action selector="onClose:" destination="csa-aw-sPY" eventType="touchUpInside" id="bjY-uJ-D1C"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="oUQ-eM-4jm" firstAttribute="trailing" secondItem="B62-Ot-Kg1" secondAttribute="trailingMargin" id="7lR-Ah-bxF"/>
+                            <constraint firstItem="9yz-qJ-iQm" firstAttribute="leading" secondItem="B62-Ot-Kg1" secondAttribute="leadingMargin" id="BwH-YE-21Q"/>
+                            <constraint firstItem="9yz-qJ-iQm" firstAttribute="trailing" secondItem="B62-Ot-Kg1" secondAttribute="trailingMargin" id="DLu-Tm-Zu1"/>
+                            <constraint firstItem="oUQ-eM-4jm" firstAttribute="top" secondItem="RfM-qO-aqr" secondAttribute="bottom" constant="46" id="Nai-Pt-mCW"/>
+                            <constraint firstItem="oUQ-eM-4jm" firstAttribute="leading" secondItem="B62-Ot-Kg1" secondAttribute="leadingMargin" id="cax-27-hmL"/>
+                            <constraint firstItem="9yz-qJ-iQm" firstAttribute="top" secondItem="oUQ-eM-4jm" secondAttribute="bottom" constant="24" id="xta-g1-pu3"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="View Cpntroller" id="srs-MF-XbO">
+                        <barButtonItem key="rightBarButtonItem" title="Toast" id="6Y0-NQ-IJg">
+                            <connections>
+                                <action selector="onToast:" destination="csa-aw-sPY" id="1eT-hU-Zlv"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="textBox" destination="oUQ-eM-4jm" id="E7p-sJ-x2L"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="0jM-CJ-ux1" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1730" y="1016"/>
         </scene>
     </scenes>
 </document>

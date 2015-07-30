@@ -19,7 +19,6 @@ class ViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
     var contents = [
         "克里斯蒂就发了看电视",
         "凌空街道史莱克吉林省卡机佛问尽量快点发咯问j",
@@ -33,8 +32,18 @@ class ViewController: UIViewController {
     @IBAction func onToast(sender:AnyObject!) {
         Toast.makeText(self, message: "Toast \(contents[index++])", duration: 3).show()
     }
+    @IBAction func onClose(sender:AnyObject!) {
+        print("关闭:\(Toast.windowTask)")
+        Toast.windowTask?.hide()
+    }
     @IBAction func onNotificationClick(sender:AnyObject!) {
-        Toast.makeNotification(self, message: "notification \(++index)", style: .ModalCanCancel([.Up, .Down])).show()
+        //Toast.makeNotification(self, message: "notification \(++index)", style: .ModalCanCancel([.Up, .Down])).show()
+        let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginController") as! ViewController
+        controller.view.frame.size = CGSize(width: 300, height: 250)
+        controller.view.frame.origin.y = (UIScreen.mainScreen().bounds.height - 250) / 2
+        controller.view.frame.origin.x = (UIScreen.mainScreen().bounds.width - 300) / 2
+
+        Toast.makeNotification(self, toastController: controller, style: .ModalCanCancel([.Up, .Down])).show()
     }
     @IBAction func onButtonClick(sender:AnyObject!) {
         switch textBox.highlightState {
