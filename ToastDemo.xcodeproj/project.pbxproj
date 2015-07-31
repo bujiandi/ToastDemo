@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		392B39961B6B5C0500FB3502 /* JDStatusBarNotification in Resources */ = {isa = PBXBuildFile; fileRef = 392B39951B6B5C0500FB3502 /* JDStatusBarNotification */; };
 		395F69D81B64D215001EC471 /* UITextBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F69D71B64D215001EC471 /* UITextBox.swift */; };
 		395F6AAC1B5E67D300E7F944 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F6AAB1B5E67D300E7F944 /* AppDelegate.swift */; };
 		395F6AAE1B5E67D300E7F944 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F6AAD1B5E67D300E7F944 /* ViewController.swift */; };
@@ -18,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		392B39951B6B5C0500FB3502 /* JDStatusBarNotification */ = {isa = PBXFileReference; lastKnownFileType = folder; name = JDStatusBarNotification; path = ../../../../Downloads/JDStatusBarNotification; sourceTree = "<group>"; };
 		395F69D71B64D215001EC471 /* UITextBox.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextBox.swift; sourceTree = "<group>"; };
 		395F6AA81B5E67D300E7F944 /* ToastDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToastDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		395F6AAB1B5E67D300E7F944 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -60,6 +62,7 @@
 		395F6AAA1B5E67D300E7F944 /* ToastDemo */ = {
 			isa = PBXGroup;
 			children = (
+				392B39951B6B5C0500FB3502 /* JDStatusBarNotification */,
 				395F6AAB1B5E67D300E7F944 /* AppDelegate.swift */,
 				395F6AAD1B5E67D300E7F944 /* ViewController.swift */,
 				39D4230D1B5E6ADC00FC808A /* TableViewController.swift */,
@@ -131,6 +134,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				395F6AB61B5E67D300E7F944 /* LaunchScreen.storyboard in Resources */,
+				392B39961B6B5C0500FB3502 /* JDStatusBarNotification in Resources */,
 				395F6AB31B5E67D300E7F944 /* Assets.xcassets in Resources */,
 				395F6AB11B5E67D300E7F944 /* Main.storyboard in Resources */,
 			);

@@ -30,11 +30,16 @@ class ViewController: UIViewController {
     ]
     var index:Int = 0
     @IBAction func onToast(sender:AnyObject!) {
+        if index > contents.count { index = 0 }
         Toast.makeText(self, message: "Toast \(contents[index++])", duration: 3).show()
     }
     @IBAction func onClose(sender:AnyObject!) {
         print("关闭:\(Toast.windowTask)")
-        Toast.windowTask?.hide()
+        if Toast.windowTask === nil {
+            Toast.makeNotification(self, message: "notification content:\(++index)").show()
+        } else {
+            Toast.windowTask?.hide()
+        }
     }
     @IBAction func onNotificationClick(sender:AnyObject!) {
         //Toast.makeNotification(self, message: "notification \(++index)", style: .ModalCanCancel([.Up, .Down])).show()

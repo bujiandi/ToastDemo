@@ -69,17 +69,19 @@ public struct Toast {
             window.windowLevel = UIWindowLevelStatusBar
             window.transform = UIApplication.sharedApplication().keyWindow?.transform ?? CGAffineTransformIdentity
             window.rootViewController = UIViewController()
+            //window.rootViewController?.wantsFullScreenLayout = true
             _overlayWindow = window
         }
         return _overlayWindow!
     }
     
-    static public func makeNotification(controller:UIViewController, message:String, style:ToastWindowStyle = .Modal) -> WindowTask {
+    static public func makeNotification(controller:UIViewController, message:String, style:ToastWindowStyle = .None(8)) -> WindowTask {
         let label = makeLabel(message)
         label.backgroundColor = UIColor.darkGrayColor()
         let task = makeWindow(controller, view: label, style: style)
         task.view.layer.cornerRadius = 0
         task.view.frame.origin = CGPoint.zeroPoint
+        task.view.frame.origin.y = 30
         task.view.frame.size.width = UIScreen.mainScreen().bounds.width
         return task
     }
@@ -340,9 +342,11 @@ public struct Toast {
                     //print("task.view.frame\(task.view.frame)")
                 } else {
                     let frame = task.view.frame
-                    window.frame = CGRect(x: frame.minX, y: frame.minY, width: min(frame.width, screenSize.width), height: min(frame.height, screenSize.height))
-                    //window.frame = CGRect(origin: CGPoint.zeroPoint, size: screenSize)
-                    window.backgroundColor = task.view.backgroundColor
+                    //window.frame = CGRect(x: frame.minX, y: frame.minY, width: min(frame.width, screenSize.width), height: min(frame.height, screenSize.height))
+                    window.frame = CGRect(origin: CGPoint.zeroPoint, size: CGSize(width: screenSize.width, height: 480))
+                    window.backgroundColor = UIColor.clearColor() //task.view.backgroundColor
+                    //window.rootViewController?.view.frame = CGRect(x: frame.minX, y: frame.minY, width: min(frame.width, screenSize.width), height: min(frame.height, screenSize.height))
+                    window.rootViewController?.view.userInteractionEnabled = false
                     task.view.frame.origin = CGPoint(x: (screenSize.width - frame.width) / 2, y: 0)
                     window.originPercent = CGPoint(x: task.view.center.x / window.frame.width, y: task.view.center.y / window.frame.height)
                     window.centerPercent = CGPoint(x: window.center.x / screenSize.width, y: window.center.y / screenSize.height)
@@ -351,6 +355,7 @@ public struct Toast {
                 }
                 window.alpha = 0
                 window.addSubview(task.view)
+                //window.rootViewController?.view.addSubview(task.view)
                 if let controller = task.childController {
                     window.rootViewController?.addChildViewController(controller)
                 }
@@ -406,7 +411,8 @@ public struct Toast {
                 task.view.alpha = 0.2
                 task.view.frame.origin = CGPointMake(x, y + 30)
                 task.view.frame.size = size
-                UIApplication.sharedApplication().keyWindow?.addSubview(task.view)
+                let keyWindow = UIApplication.sharedApplication().keyWindow ?? UIApplication.sharedApplication().windows.first
+                keyWindow?.addSubview(task.view)
                 if let controller = task.childController {
                     task.viewController?.addChildViewController(controller)
                 }
@@ -432,7 +438,8 @@ public struct Toast {
                 var frame = task.frame
                 frame.origin.y = frame.midY + 30
                 task.view.frame = frame
-                UIApplication.sharedApplication().keyWindow?.addSubview(task.view)
+                let keyWindow = UIApplication.sharedApplication().keyWindow ?? UIApplication.sharedApplication().windows.first
+                keyWindow?.addSubview(task.view)
                 if let controller = task.childController {
                     task.viewController?.addChildViewController(controller)
                 }
@@ -686,13 +693,7 @@ public struct Toast {
         
     }
 }
-//
-//extension UIView {
-//    
-//    override func layoutSubviews() {
-//        
-//    }
-//}
+
 
 class OverlayWindow : UIWindow {
     
@@ -712,6 +713,17 @@ class OverlayWindow : UIWindow {
             view.center = CGPoint(x: bounds.width * originPercent.x, y: bounds.height * originPercent.y)
         }
         center = CGPoint(x: size.width * centerPercent.x, y: size.height * centerPercent.y)
+    }
+    
+    override func hitTest(point: CGPoint, withEvent event: UIEvent?) -> UIView? {
+        let view = super.hitTest(point, withEvent: event)
+        print("测试View:\(view)")
+        if view === self {
+            let window = UIApplication.sharedApplication().keyWindow ?? UIApplication.sharedApplication().windows.first
+            print("操作穿透")
+            return window?.hitTest(point, withEvent: event) ?? view
+        }
+        return view
     }
 }
 
