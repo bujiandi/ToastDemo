@@ -59,16 +59,16 @@ public struct Toast {
             }
         }
     }
-    static private var _overlayWindow:UIWindow? = nil
-    static private var overlayWindow:UIWindow {
+    static private var _overlayWindow:OverlayWindow? = nil
+    static private var overlayWindow:OverlayWindow {
         
         if _overlayWindow == nil {
-            let window = UIWindow(frame: UIApplication.sharedApplication().keyWindow?.frame ?? UIScreen.mainScreen().bounds)
+            let window = OverlayWindow(frame: UIApplication.sharedApplication().keyWindow?.frame ?? UIScreen.mainScreen().bounds)
             window.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
             window.userInteractionEnabled = true    // 支持手势
             window.windowLevel = UIWindowLevelStatusBar
             window.transform = UIApplication.sharedApplication().keyWindow?.transform ?? CGAffineTransformIdentity
-            window.rootViewController = OverlayViewControlller()
+            window.rootViewController = UIViewController()
             _overlayWindow = window
         }
         return _overlayWindow!
@@ -77,28 +77,33 @@ public struct Toast {
     static public func makeNotification(controller:UIViewController, message:String, style:ToastWindowStyle = .Modal) -> WindowTask {
         let label = makeLabel(message)
         label.backgroundColor = UIColor.darkGrayColor()
-        return makeNotification(controller, view: label, style: style)
+        let task = makeWindow(controller, view: label, style: style)
+        task.view.layer.cornerRadius = 0
+        task.view.frame.origin = CGPoint.zeroPoint
+        task.view.frame.size.width = UIScreen.mainScreen().bounds.width
+        return task
     }
     
-    static public func makeNotification(controller:UIViewController, toastController:UIViewController, style:ToastWindowStyle = .Modal) -> WindowTask {
-        let task = makeNotification(controller, view: toastController.view, style: style)
+    static public func makeWindow(controller:UIViewController, toastController:UIViewController, style:ToastWindowStyle = .Modal) -> WindowTask {
+        let task = makeWindow(controller, view: toastController.view, style: style)
         task.childController = toastController
         return task
     }
     
-    static public func makeNotification(controller:UIViewController, view:UIView, style:ToastWindowStyle = .Modal) -> WindowTask {
+    static public func makeWindow(controller:UIViewController, view:UIView, style:ToastWindowStyle = .Modal) -> WindowTask {
         
         let insets = view.layoutMargins
-        let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
-        //let backgroundView = UIView(frame: CGRect(x: 0, y: view.frame.minY, width: screenSize.width, height: view.frame.height + insets.top + insets.bottom))
         let backgroundView = UIView(frame: CGRect(x: view.frame.minX - insets.left, y: view.frame.minY - insets.top, width: view.frame.width + insets.left + insets.right, height: view.frame.height + insets.top + insets.bottom))
         
         view.frame.origin = CGPoint(x: insets.left, y: insets.top) //CGPoint(x: (screenSize.width - view.frame.width) / 2, y: insets.top)
+        
         backgroundView.addSubview(view)
         backgroundView.backgroundColor = view.backgroundColor
         backgroundView.layer.shadowColor = UIColor(white: 0.2, alpha: 1).CGColor
         backgroundView.layer.shadowOpacity = 0.8
         backgroundView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        backgroundView.layer.cornerRadius = 7
+
         
         let notification = WindowTask(controller: controller, view: backgroundView, style:style)
         
@@ -313,28 +318,11 @@ public struct Toast {
             if task.view.superview === nil {
                 let window = overlayWindow
                 window.gestureRecognizers = nil
-                
-//                if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
-//                    // 只有 iPhone 才需要旋转 window
-//                    func DegreesToRadians(degrees:CGFloat) -> CGFloat {
-//                        return degrees * CGFloat(M_PI) / 180
-//                    }
-//                    
-//                    switch UIApplication.sharedApplication().statusBarOrientation  {
-//                    case .LandscapeLeft:
-//                        window.transform = CGAffineTransform(a: 0, b: -1, c: 1, d: 0, tx: 0, ty: 0) //CGAffineTransformRotate(CGAffineTransformIdentity, -DegreesToRadians(90))
-//                    case .LandscapeRight:
-//                        window.transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: 0, ty: 0) //CGAffineTransformRotate(CGAffineTransformIdentity, DegreesToRadians(90))
-//                    case .PortraitUpsideDown:
-//                        task.view.transform = CGAffineTransformMakeRotation(DegreesToRadians(0))
-//                    default:
-//                        task.view.transform = UIApplication.sharedApplication().keyWindow?.transform ?? CGAffineTransformIdentity
-//                    }
-//                    //print("改变方向\(task.orientation) curr:\(UIApplication.sharedApplication().statusBarOrientation)")
-//                }
+                window.rootViewController?.view.hidden = true
+
                 
                 if task.style.isModal {
-                    window.transformFrame = CGRect(origin: CGPoint.zeroPoint, size: screenSize)
+                    window.frame = CGRect(origin: CGPoint.zeroPoint, size: screenSize)
                     window.backgroundColor = UIColor(white: 0.2, alpha: 0.6)
                     if case .ModalCanCancel(let direction) = task.style {
                         // 如果是可自动终止的
@@ -346,19 +334,20 @@ public struct Toast {
                     }
                     
                     task.frame = task.view.frame
+                    window.originPercent = CGPoint(x: task.view.center.x / window.frame.width, y: task.view.center.y / window.frame.height)
+                    window.centerPercent = CGPoint(x: window.center.x / screenSize.width, y: window.center.y / screenSize.height)
                     task.view.frame.origin.y -= 30
                     //print("task.view.frame\(task.view.frame)")
                 } else {
                     let frame = task.view.frame
-                    window.transformFrame = CGRect(x: frame.minX, y: frame.minY, width: min(frame.width, screenSize.width), height: min(frame.height, screenSize.height))
+                    window.frame = CGRect(x: frame.minX, y: frame.minY, width: min(frame.width, screenSize.width), height: min(frame.height, screenSize.height))
+                    //window.frame = CGRect(origin: CGPoint.zeroPoint, size: screenSize)
                     window.backgroundColor = task.view.backgroundColor
                     task.view.frame.origin = CGPoint(x: (screenSize.width - frame.width) / 2, y: 0)
-                    //
-                    var rect = window.transformFrame
-                    //print(rect)
-                    task.frame = rect
-                    rect.origin.y -= 30
-                    window.transformFrame = rect
+                    window.originPercent = CGPoint(x: task.view.center.x / window.frame.width, y: task.view.center.y / window.frame.height)
+                    window.centerPercent = CGPoint(x: window.center.x / screenSize.width, y: window.center.y / screenSize.height)
+                    task.frame = window.frame
+                    window.frame.origin.y -= 30
                 }
                 window.alpha = 0
                 window.addSubview(task.view)
@@ -455,8 +444,8 @@ public struct Toast {
         // 将要移除的列表
         for task in cleanQueue {
             if let windowTask = task as? WindowTask where !windowTask.style.isModal {
-                task.frame = overlayWindow.transformFrame
-                task.frame.origin.y = overlayWindow.transformFrame.minY - overlayWindow.transformFrame.height
+                task.frame = overlayWindow.frame
+                task.frame.origin.y = overlayWindow.frame.minY - overlayWindow.frame.height
             } else {
                 task.frame = task.view.frame
                 task.frame.origin.y = task.frame.minY - task.frame.height
@@ -475,7 +464,7 @@ public struct Toast {
                     if windowTask.style.isModal {
                         task.view.frame = task.frame
                     } else {
-                        _overlayWindow?.transformFrame = task.frame
+                        _overlayWindow?.frame = task.frame
                     }
                     //task.view.alpha = task.alpha
                     _overlayWindow?.alpha = task.alpha
@@ -530,7 +519,7 @@ public struct Toast {
         public init(controller: UIViewController, view: UIView, style:ToastWindowStyle = ToastWindowStyle.None(8)) {
             self.style = style
             self.orientation = UIApplication.sharedApplication().statusBarOrientation
-            super.init(controller: controller, view: view)
+            super.init(controller: controller, view:view)
             if case .None(let duration) = style {
                 super.duration = duration
             }
@@ -649,8 +638,8 @@ public struct Toast {
     public class Task : Equatable {
         
         public let view:UIView
+        public var childController:UIViewController?
         public weak var viewController:UIViewController?
-        public weak var childController:UIViewController?
         
         public var duration:NSTimeInterval = 0
         private var dismissTime:NSTimeInterval = 0
@@ -664,6 +653,11 @@ public struct Toast {
             self.view = view
             self.defaultSize = view.bounds.size
             self.cornerRadius = view.layer.cornerRadius
+        }
+        
+        deinit {
+            childController = nil
+            viewController = nil
         }
         
         public func show() {
@@ -692,15 +686,37 @@ public struct Toast {
         
     }
 }
+//
+//extension UIView {
+//    
+//    override func layoutSubviews() {
+//        
+//    }
+//}
 
-class OverlayViewControlller: UIViewController {
-    override func shouldAutorotate() -> Bool {
-        return true
+class OverlayWindow : UIWindow {
+    
+    private var defaultSize:CGSize = CGSize.zeroSize
+    private var originPercent:CGPoint = CGPoint.zeroPoint
+    private var centerPercent:CGPoint = CGPoint.zeroPoint
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let size = UIScreen.mainScreen().bounds.size
+
+        if defaultSize == CGSize.zeroSize {
+            defaultSize = bounds.size
+        } else if bounds.size != size {
+            frame.size = defaultSize
+        }
+        for view in subviews {
+            view.center = CGPoint(x: bounds.width * originPercent.x, y: bounds.height * originPercent.y)
+        }
+        center = CGPoint(x: size.width * centerPercent.x, y: size.height * centerPercent.y)
     }
 }
 
 extension UIInterfaceOrientation : CustomStringConvertible {
-
+    
     public var description: String {
         switch self {
         case .LandscapeLeft: return "LandscapeLeft"
@@ -711,12 +727,43 @@ extension UIInterfaceOrientation : CustomStringConvertible {
     }
 }
 
+extension UIViewController {
+    
+    public override class func initialize() {
+        Toast.registerViewControllerClass(self)
+    }
+    
+    func __selfDidDisappear(animated: Bool) {
+        print("此方法用于回调原 ViewController 的 viewDidDisappear 函数指针被替换")
+    }
+    
+    final func taskDidDisappear(animated: Bool) {
+        self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
+        
+        //print("已还原 self=\(self) count:\(Toast.taskFilterWithController(self).count)")
+        // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
+        for task in Toast.taskFilterWithController(self) {
+            task.hideLater()
+        }
+        Toast.animateTasks()
+        
+    }
+}
+/*
+public class OverlayRootControlller: UIViewController {
+    
+    override public func shouldAutorotate() -> Bool {
+        return true
+    }
+}
+*/
+
+/*
 extension UIWindow {
     
     // 选择后可以得到正常的 frame
     var transformFrame:CGRect {
         get {
-            return frame
             // 只有 iPhone 才需要旋转 window
             if UIDevice.currentDevice().userInterfaceIdiom == .Pad { return frame }
             
@@ -733,8 +780,6 @@ extension UIWindow {
             }
         }
         set (rect) {
-            frame = rect
-            return
             // 只有 iPhone 才需要旋转 window
             if UIDevice.currentDevice().userInterfaceIdiom == .Pad { frame = rect; return }
 
@@ -753,26 +798,22 @@ extension UIWindow {
     }
     
 }
-
-extension UIViewController {
- 
-    public override class func initialize() {
-        Toast.registerViewControllerClass(self)
-    }
-    
-    func __selfDidDisappear(animated: Bool) {
-        print("此方法用于回调原 ViewController 的 viewDidDisappear 函数指针被替换")
-    }
-    
-    final func taskDidDisappear(animated: Bool) {
-        self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
-        
-        //print("已还原 self=\(self) count:\(Toast.taskFilterWithController(self).count)")
-        // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
-        for task in Toast.taskFilterWithController(self) {
-            task.hideLater()
-        }
-        Toast.animateTasks()
-
-    }
-}
+*/
+//                if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
+//                    // 只有 iPhone 才需要旋转 window
+//                    func DegreesToRadians(degrees:CGFloat) -> CGFloat {
+//                        return degrees * CGFloat(M_PI) / 180
+//                    }
+//
+//                    switch UIApplication.sharedApplication().statusBarOrientation  {
+//                    case .LandscapeLeft:
+//                        window.transform = CGAffineTransform(a: 0, b: -1, c: 1, d: 0, tx: 0, ty: 0) //CGAffineTransformRotate(CGAffineTransformIdentity, -DegreesToRadians(90))
+//                    case .LandscapeRight:
+//                        window.transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: 0, ty: 0) //CGAffineTransformRotate(CGAffineTransformIdentity, DegreesToRadians(90))
+//                    case .PortraitUpsideDown:
+//                        task.view.transform = CGAffineTransformMakeRotation(DegreesToRadians(0))
+//                    default:
+//                        task.view.transform = UIApplication.sharedApplication().keyWindow?.transform ?? CGAffineTransformIdentity
+//                    }
+//                    //print("改变方向\(task.orientation) curr:\(UIApplication.sharedApplication().statusBarOrientation)")
+//                }

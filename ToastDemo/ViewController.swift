@@ -40,10 +40,10 @@ class ViewController: UIViewController {
         //Toast.makeNotification(self, message: "notification \(++index)", style: .ModalCanCancel([.Up, .Down])).show()
         let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginController") as! ViewController
         controller.view.frame.size = CGSize(width: 300, height: 250)
-        controller.view.frame.origin.y = (UIScreen.mainScreen().bounds.height - 250) / 2
         controller.view.frame.origin.x = (UIScreen.mainScreen().bounds.width - 300) / 2
+        controller.view.frame.origin.y = (UIScreen.mainScreen().bounds.height - 250) / 2
 
-        Toast.makeNotification(self, toastController: controller, style: .ModalCanCancel([.Up, .Down])).show()
+        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel([.Up, .Down])).show()
     }
     @IBAction func onButtonClick(sender:AnyObject!) {
         switch textBox.highlightState {
