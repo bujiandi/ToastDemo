@@ -12,14 +12,25 @@ class TableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem()
+        tableView.separatorInset.left = 0
+        //tableView.layoutMargins.left = 0
+//        var dict:Dictionary<String, String> = [:]
+//        dict["3"] = "三"
+//        dict["1"] = "一"
+//        dict["2"] = "二"
+//        dict["4"] = "四"
+//        dict.keys.array[1] = "9"
+//        print(dict)
+//        for (key, value) in dict {
+//            print("\(key):\(value)")
+//        }
     }
 
+    override func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+        cell.separatorInset.left = 0
+        cell.layoutMargins.left = 0
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -29,16 +40,24 @@ class TableViewController: UITableViewController {
     @IBAction func onToast(sender:AnyObject!) {
         //print("showToast")
         //Toast.makeActivity(self, message: "activity view \(++index)").show()
-        Toast.makeNotification(self, message: "isadlkfjlkadsjflkasdjlkf jsdlkajflkadsjflkjadslfjal;sdkj ljdsklajf lkjasljf s to later = \(++index)", style: .None(5)).show()
-
-//        if let activityToast = Toast.activityTask {
-//            activityToast.hide()
-//        } else {
-//            Toast.makeActivity(self, message: "activity view is show").show()
-//        }
+        //Toast.makeNotification(self, message: "isadlkfjlkadsjflkasdjlkf jsdlkajflkadsjflkjadslfjal;sdkj ljdsklajf lkjasljf s to later = \(++index)", style: .None(5)).show()
+        //Toast.makeActivity(self, message: "need activity : \(++index)", style: .None(300)).show()
+        if let activityToast = Toast.activityTask {
+            activityToast.hide()
+        } else {
+            Toast.makeActivity(self, message: "activity view is show:\(++index)", style: .None(timeout: 300)).show()
+        }
         
         //Toast.makeText(self, message: "Toast \(++index)", duration: 3).show()
 
+    }
+    
+    @IBAction func onActivityToast(sender:AnyObject) {
+        if let activityToast = Toast.activityTask {
+            activityToast.hide()
+        } else {
+            Toast.makeActivity(self, message: "activity view is show:\(++index)", style: .None(timeout: 300)).show()
+        }
     }
 //    override func viewDidDisappear(animated: Bool) {
 //        super.viewWillDisappear(animated)

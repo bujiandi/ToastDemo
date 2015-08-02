@@ -30,16 +30,16 @@ class ViewController: UIViewController {
     ]
     var index:Int = 0
     @IBAction func onToast(sender:AnyObject!) {
-        if index > contents.count { index = 0 }
+        if index >= contents.count { index = 0 }
         Toast.makeText(self, message: "Toast \(contents[index++])", duration: 3).show()
     }
     @IBAction func onClose(sender:AnyObject!) {
-        print("关闭:\(Toast.windowTask)")
         if Toast.windowTask === nil {
             Toast.makeNotification(self, message: "notification content:\(++index)").show()
         } else {
             Toast.windowTask?.hide()
         }
+        
     }
     @IBAction func onNotificationClick(sender:AnyObject!) {
         //Toast.makeNotification(self, message: "notification \(++index)", style: .ModalCanCancel([.Up, .Down])).show()
@@ -47,8 +47,7 @@ class ViewController: UIViewController {
         controller.view.frame.size = CGSize(width: 300, height: 250)
         controller.view.frame.origin.x = (UIScreen.mainScreen().bounds.width - 300) / 2
         controller.view.frame.origin.y = (UIScreen.mainScreen().bounds.height - 250) / 2
-
-        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel([.Up, .Down])).show()
+        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel(cancelDirection: [.Up, .Down])).show()
     }
     @IBAction func onButtonClick(sender:AnyObject!) {
         switch textBox.highlightState {
@@ -60,6 +59,11 @@ class ViewController: UIViewController {
             textBox.highlightState = UITextBoxHighlightState.Wrong("wrong")
         case .Wrong:
             textBox.highlightState = UITextBoxHighlightState.Default
+        }
+        if let activityToast = Toast.activityTask {
+            activityToast.hide()
+        } else {
+            Toast.makeActivity(self, message: "activity view is show:\(++index)", style: .None(timeout: 300)).show()
         }
         //textBox.highlightState = UITextBoxHighlightState.Validator("ok")
         //Toast.makeActivity(self, message: "This is a activity toast").show()
