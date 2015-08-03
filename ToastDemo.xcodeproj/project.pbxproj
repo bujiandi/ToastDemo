@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		391238181B6DFD5100A9F76F /* LinkedDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 391238171B6DFD5100A9F76F /* LinkedDictionary.swift */; };
+		3912381C1B6E0CE400A9F76F /* OrderedSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3912381B1B6E0CE400A9F76F /* OrderedSet.swift */; };
 		395F69D81B64D215001EC471 /* UITextBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F69D71B64D215001EC471 /* UITextBox.swift */; };
 		395F6AAC1B5E67D300E7F944 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F6AAB1B5E67D300E7F944 /* AppDelegate.swift */; };
 		395F6AAE1B5E67D300E7F944 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F6AAD1B5E67D300E7F944 /* ViewController.swift */; };
@@ -18,6 +20,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		391238171B6DFD5100A9F76F /* LinkedDictionary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkedDictionary.swift; sourceTree = "<group>"; };
+		3912381B1B6E0CE400A9F76F /* OrderedSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrderedSet.swift; sourceTree = "<group>"; };
 		395F69D71B64D215001EC471 /* UITextBox.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextBox.swift; sourceTree = "<group>"; };
 		395F6AA81B5E67D300E7F944 /* ToastDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToastDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		395F6AAB1B5E67D300E7F944 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -63,6 +67,8 @@
 				395F6AAB1B5E67D300E7F944 /* AppDelegate.swift */,
 				395F6AAD1B5E67D300E7F944 /* ViewController.swift */,
 				39D4230D1B5E6ADC00FC808A /* TableViewController.swift */,
+				391238171B6DFD5100A9F76F /* LinkedDictionary.swift */,
+				3912381B1B6E0CE400A9F76F /* OrderedSet.swift */,
 				39D4230F1B5E6AFC00FC808A /* Toast.swift */,
 				395F69D71B64D215001EC471 /* UITextBox.swift */,
 				395F6AAF1B5E67D300E7F944 /* Main.storyboard */,
@@ -144,9 +150,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				395F69D81B64D215001EC471 /* UITextBox.swift in Sources */,
+				3912381C1B6E0CE400A9F76F /* OrderedSet.swift in Sources */,
 				395F6AAE1B5E67D300E7F944 /* ViewController.swift in Sources */,
 				39D423101B5E6AFC00FC808A /* Toast.swift in Sources */,
 				39D4230E1B5E6ADC00FC808A /* TableViewController.swift in Sources */,
+				391238181B6DFD5100A9F76F /* LinkedDictionary.swift in Sources */,
 				395F6AAC1B5E67D300E7F944 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

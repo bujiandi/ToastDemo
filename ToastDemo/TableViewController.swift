@@ -8,21 +8,95 @@
 
 import UIKit
 
+struct TestData {
+    var hasValue:Int
+    var text:String
+    init (_ hasValue:Int, _ text:String) {
+        self.hasValue = hasValue
+        self.text = text
+    }
+}
+
 class TableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.separatorInset.left = 0
         //tableView.layoutMargins.left = 0
+        
+        var startTime = CACurrentMediaTime()
+        let length = 10000000
+        
+        
+        let pointer = UnsafeMutablePointer<Int>.alloc(length)
+        for var i:Int=0; i<length; i++ {
+            pointer.advancedBy(i).initialize(i)
+        }
+        print("指针初始化时间:\(CACurrentMediaTime() - startTime)")
+        
+        startTime = CACurrentMediaTime()
+        var dataPointer = UnsafeMutablePointer<TestData>.alloc(length)
+        for var i:Int=0; i<length; i++ {
+            dataPointer.advancedBy(i).initialize(TestData(i,"abc"))
+        }
+        print("指针对象初始化时间:\(CACurrentMediaTime() - startTime)")
+
+        startTime = CACurrentMediaTime()
+        var array:Array<Int> = []
+        for var i:Int=0; i<length; i++ {
+            array.append(i)
+        }
+        print("数组初始化时间:\(CACurrentMediaTime() - startTime)")
+        
+        startTime = CACurrentMediaTime()
+        let oarray:OArray<Int> = OArray<Int>()
+        for var i:Int=0; i<length; i++ {
+            oarray.append(i)
+        }
+        print("自定义数组初始化时间:\(CACurrentMediaTime() - startTime)")
+        
+        startTime = CACurrentMediaTime()
+        for var i:Int=0; i<length; i++ {
+            if oarray[i] == length { break }
+        }
+        print("自定义数组比较时间:\(CACurrentMediaTime() - startTime)")
+        
+        startTime = CACurrentMediaTime()
+        for var i:Int=0; i<length; i++ {
+            if array[i] == length { break }
+        }
+        print("数组比较时间:\(CACurrentMediaTime() - startTime)")
+
+        startTime = CACurrentMediaTime()
+        for var i:Int=0; i<length; i++ {
+            if pointer.advancedBy(i).memory == length { break }
+        }
+        print("指针比较时间:\(CACurrentMediaTime() - startTime)")
+        
+        startTime = CACurrentMediaTime()
+        for var i:Int=0; i<length; i++ {
+            if dataPointer.advancedBy(i).memory.hasValue == length { break }
+        }
+        print("指针对象比较时间:\(CACurrentMediaTime() - startTime)")
+        //let a:OrderedSet<String> = OrderedSet<String>()
 //        var dict:Dictionary<String, String> = [:]
 //        dict["3"] = "三"
 //        dict["1"] = "一"
 //        dict["2"] = "二"
 //        dict["4"] = "四"
-//        dict.keys.array[1] = "9"
+//        let pointer = UnsafeMutablePointer<Dictionary<String, String>>(unsafeAddressOf(dict))
+//        //let pointer = UnsafeMutablePointer<Dictionary<String, String>>(&dict)
+//        //dict.keys.array[1] = "9"
 //        print(dict)
+//        dict["1"] = nil
+//        dict["6"] = "六"
+//        dict["7"] = "七"
+//
 //        for (key, value) in dict {
 //            print("\(key):\(value)")
+//        }
+//        for value in dict.values {
+//            print("value:\(value)")
 //        }
     }
 
