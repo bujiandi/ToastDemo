@@ -5,17 +5,24 @@
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
     "7AD52EAFC332232F8C733887667C4B3F1C74571C" : 0,
+    "53AF199A38C93CE6A65F32E6DDCF4F8BD482C5C6" : 0,
     "560029A454F661B71302BA3DF6575EEEFF82B8FA" : 0
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "C36C51B9-DCA7-4A78-9BBE-D736B10119FE",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "7AD52EAFC332232F8C733887667C4B3F1C74571C" : "ToastDemo\/",
+    "53AF199A38C93CE6A65F32E6DDCF4F8BD482C5C6" : "..\/SwiftFramework\/CustomArrayAndDictionary",
     "560029A454F661B71302BA3DF6575EEEFF82B8FA" : "..\/SwiftFramework\/Swift-UtilsFramework"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "ToastDemo",
   "DVTSourceControlWorkspaceBlueprintVersion" : 203,
   "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "ToastDemo.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bujiandi\/CustomArrayAndDictionary.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "53AF199A38C93CE6A65F32E6DDCF4F8BD482C5C6"
+    },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bujiandi\/Swift-UtilsFramework.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",

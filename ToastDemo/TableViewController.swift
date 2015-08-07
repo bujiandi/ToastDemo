@@ -49,6 +49,13 @@ class TableViewController: UITableViewController {
         print("数组初始化时间:\(CACurrentMediaTime() - startTime)")
         
         startTime = CACurrentMediaTime()
+        var cArray:ContiguousArray<Int> = []
+        for var i:Int=0; i<length; i++ {
+            cArray.append(i)
+        }
+        print("连续数组初始化时间:\(CACurrentMediaTime() - startTime)")
+        
+        startTime = CACurrentMediaTime()
         let oarray:OArray<Int> = OArray<Int>()
         for var i:Int=0; i<length; i++ {
             oarray.append(i)
@@ -67,6 +74,12 @@ class TableViewController: UITableViewController {
         }
         print("数组比较时间:\(CACurrentMediaTime() - startTime)")
 
+        startTime = CACurrentMediaTime()
+        for var i:Int=0; i<length; i++ {
+            if cArray[i] == length { break }
+        }
+        print("连续数组比较时间:\(CACurrentMediaTime() - startTime)")
+        
         startTime = CACurrentMediaTime()
         for var i:Int=0; i<length; i++ {
             if pointer.advancedBy(i).memory == length { break }
