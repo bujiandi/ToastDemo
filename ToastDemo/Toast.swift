@@ -405,7 +405,7 @@ public struct Toast {
         // 将要移除的列表
         for task in cleanQueue {
             task.frame = task.view.frame
-            task.frame.origin.y = task.frame.minY - task.frame.height
+            task.frame.origin.y -= 30 //task.frame.minY - task.frame.height
 
             task.alpha = 0
             
