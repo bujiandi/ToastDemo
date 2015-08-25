@@ -76,7 +76,7 @@ public struct Toast {
         let task = makeWindow(controller, view: label, style: style)
         task.cornerRadius = 0
         task.view.layer.cornerRadius = 0
-        task.view.frame.origin = CGPoint.zeroPoint
+        task.view.frame.origin = CGPoint.zero
         task.view.frame.size.width = UIScreen.mainScreen().bounds.width
         task.defaultSize = task.view.frame.size
         return task
@@ -607,7 +607,7 @@ public struct Toast {
         private var defaultSize:CGSize
         private var defaultCornerRadius:CGFloat = 8
         private var cornerRadius:CGFloat = 8
-        private var frame:CGRect = CGRect.zeroRect
+        private var frame:CGRect = CGRect.zero
         private var alpha:CGFloat = 1
         private var transform:CGAffineTransform = CGAffineTransformIdentity
 
@@ -658,7 +658,7 @@ public struct Toast {
 
 class OverlayWindow : UIWindow {
     
-    private var originPercent:CGPoint = CGPoint.zeroPoint
+    private var originPercent:CGPoint = CGPoint.zero
     override func layoutSubviews() {
         super.layoutSubviews()
         for view in subviews {
