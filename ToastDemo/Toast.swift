@@ -431,6 +431,8 @@ public struct Toast {
                 hasWindowTask = hasWindowTask || task is WindowTask
                 task.view.removeFromSuperview()
                 task.childController?.removeFromParentViewController()
+                task.onDismiss?()
+                task.onDismiss = nil
             }
             // 如果队列中再无 Toast.WindowTask 则移除窗口
             if hasWindowTask && windowTask === nil {
@@ -481,7 +483,8 @@ public struct Toast {
                 super.duration = duration
             }
         }
-        public override func show() {
+        public override func show(onDismiss:(() -> Void)? = nil) {
+            self.onDismiss = onDismiss
             if self.style.isModal {
                 
                 // 如果没有模态 Toast.WindowTask 则立即显示本 消息
@@ -573,7 +576,8 @@ public struct Toast {
             super.init(controller: controller, view: view, style: style)
         }
         
-        override public func show() {
+        override public func show(onDismiss:(() -> Void)? = nil) {
+            self.onDismiss = onDismiss
             Toast.activityTask = self
             if let task = Toast.windowTask where !task.style.isModal {
                 Toast.windowTask = self
@@ -610,6 +614,7 @@ public struct Toast {
         private var frame:CGRect = CGRect.zero
         private var alpha:CGFloat = 1
         private var transform:CGAffineTransform = CGAffineTransformIdentity
+        private var onDismiss:(()->Void)?
 
         public init(controller:UIViewController, view:UIView) {
             self.viewController = controller
@@ -628,7 +633,8 @@ public struct Toast {
             viewController = nil
         }
         
-        public func show() {
+        public func show(onDismiss:(()->Void)? = nil) {
+            self.onDismiss = onDismiss
             dismissTime = CACurrentMediaTime() + duration + (Toast.tasksQueue.count > 2 ? Toast.minDismissTime : 0) // 计算消失时间
             if let _ = Toast.tasksQueue.indexOf(self) {
                 return
