@@ -23,7 +23,7 @@ class TableViewController: UITableViewController {
         super.viewDidLoad()
         tableView.separatorInset.left = 0
         //tableView.layoutMargins.left = 0
-        
+/*
         var startTime = CACurrentMediaTime()
         let length = 10000000
         
@@ -35,7 +35,7 @@ class TableViewController: UITableViewController {
         print("指针初始化时间:\(CACurrentMediaTime() - startTime)")
         
         startTime = CACurrentMediaTime()
-        var dataPointer = UnsafeMutablePointer<TestData>.alloc(length)
+        let dataPointer = UnsafeMutablePointer<TestData>.alloc(length)
         for var i:Int=0; i<length; i++ {
             dataPointer.advancedBy(i).initialize(TestData(i,"abc"))
         }
@@ -91,6 +91,8 @@ class TableViewController: UITableViewController {
             if dataPointer.advancedBy(i).memory.hasValue == length { break }
         }
         print("指针对象比较时间:\(CACurrentMediaTime() - startTime)")
+*/
+        
         //let a:OrderedSet<String> = OrderedSet<String>()
 //        var dict:Dictionary<String, String> = [:]
 //        dict["3"] = "三"

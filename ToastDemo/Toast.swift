@@ -30,14 +30,6 @@ public enum ToastWindowStyle {
 }
 
 public struct Toast {
-    
-    static private var changes:[AnyClass] = []
-    static private func isChange(cls:AnyClass) -> Bool {
-        for objCls in changes {
-            if objCls === cls { return true }
-        }
-        return false
-    }
 
     static public var fontSize:CGFloat = 13
     static public var interval:CGFloat = 5     // 默认 Toast.Task 间隔
@@ -194,13 +186,14 @@ public struct Toast {
             }
         }
         
+        // 将要显示的窗口 Toast.WindowTask
         for task in windowQueue {
             if let viewController = task.viewController {
                 if controller === viewController { tasks.append(task) }
             }
         }
         
-        // 要显示的 Toast.Task
+        // 将要显示的 Toast.Task
         for task:Task in tasksQueue {
             if let viewController = task.viewController {
                 if controller === viewController { tasks.append(task) }
@@ -211,25 +204,26 @@ public struct Toast {
     }
     
     static private func registerViewControllerClass<T : UIViewController>(cls:T.Type) {
-        if !isChange(cls) {
-            changes.append(cls)
-            
+        if cls !== UIViewController.self {
             let viewDidDisappearSelector = Selector("viewDidDisappear:")
-            let taskDidDisappearSelector = Selector("taskDidDisappear:")
-            let selfDidDisappearSelector = Selector("__selfDidDisappear:")
             
             let viewDidDisappearMethod = class_getInstanceMethod(cls, viewDidDisappearSelector)
-            let taskDidDisappearMethod = class_getInstanceMethod(cls, taskDidDisappearSelector)
+            let taskDidDisappearMethod = class_getInstanceMethod(cls, "taskDidDisappear:")
             
             let taskDidDisappearIMP = method_getImplementation(taskDidDisappearMethod)
             
             var viewDidDisappearIMP:IMP = nil
+            
             // 如果对象 没有 override func viewDidDisappear 则创建一个 并跳转到 taskDidDisappear
             if !class_addMethod(cls, viewDidDisappearSelector, taskDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
                 
+                let taskDidDisappearAndRecallMethod = class_getInstanceMethod(cls, "taskDidDisappearAndRecall:")
+                let taskDidDisappearAndRecallIMP = method_getImplementation(taskDidDisappearAndRecallMethod)
+
                 // 如果 存在 override func viewDidDisappear 则将函数指针替换为 taskDidDisappear
-                viewDidDisappearIMP = class_replaceMethod(cls, viewDidDisappearSelector, taskDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
+                viewDidDisappearIMP = class_replaceMethod(cls, viewDidDisappearSelector, taskDidDisappearAndRecallIMP, method_getTypeEncoding(viewDidDisappearMethod))
                 
+                let selfDidDisappearSelector = Selector("__selfDidDisappear:")
                 // 并且 创建/替换 一个 __selfDidDisappear 函数为原 override func viewDidDisappear 的指针, 用于回调
                 if !class_addMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
                     class_replaceMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
@@ -712,8 +706,13 @@ extension UIViewController {
         print("此方法用于回调原 ViewController 的 viewDidDisappear 函数指针被替换")
     }
     
-    final func taskDidDisappear(animated: Bool) {
+    final func taskDidDisappearAndRecall(animated: Bool) {
         self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
+        taskDidDisappear(animated)
+    }
+    
+    final func taskDidDisappear(animated: Bool) {
+        //self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
         
         //print("已还原 self=\(self) count:\(Toast.taskFilterWithController(self).count)")
         // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
