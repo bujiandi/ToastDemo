@@ -41,7 +41,7 @@ class UITextBox: UITextField {
     var placeholderLabel:UILabel {
         if _placeholderLabel == nil {
             let label = UILabel(frame: super.placeholderRectForBounds(bounds))
-            label.font = font
+            label.font = UIFont.systemFontOfSize(UIFont.systemFontSize())
             setHighlightText(label, state: self._highlightState)
             _placeholderLabel = label
             addSubview(label)
@@ -103,7 +103,7 @@ class UITextBox: UITextField {
     private func animationFirstResponder(isFirstResponder:Bool) {
         UIView.animateWithDuration(NSTimeInterval(animateDuration), delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveLinear, animations: {
             let color = self.getHighlightColor(self._highlightState)
-            super.backgroundColor = color
+            super.backgroundColor = isFirstResponder ? color : self._backgroundColor ?? UIColor.whiteColor()
             if let label = self._placeholderLabel {
                 self.setHighlightText(label, state: self._highlightState)
                 label.frame = self.placeholderRectAtRight(isFirstResponder || !(self.text ?? "").isEmpty)
@@ -161,6 +161,11 @@ class UITextBox: UITextField {
             label.textColor = getTextColorWithHighlightColor(getHighlightColor(_highlightState))
         }
     }
+    
+    private func getBackgroundColorWithTextColor(color:UIColor) -> UIColor {
+        var r:CGFloat, g:CGFloat, b:CGFloat, a:CGFloat
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+    }
     private func getTextColorWithHighlightColor(color:UIColor) -> UIColor {
         var r:CGFloat = 0
         var g:CGFloat = 0
@@ -205,8 +210,7 @@ extension UIColor {
         let length = hex.startIndex.distanceTo(hex.endIndex) //distance(hex.startIndex, hex.endIndex)
         
         guard let result = regular.firstMatchInString(hex, options: NSMatchingOptions(rawValue: 0), range: NSMakeRange(0, length)) else {
-            print("error: hex isn't color hex value!")
-            return nil
+             return nil
         }
         
         let start = hex.startIndex.advancedBy(result.rangeAtIndex(1).length + result.rangeAtIndex(1).location) //advance(hex.startIndex, result.rangeAtIndex(1).length + result.rangeAtIndex(1).location)
