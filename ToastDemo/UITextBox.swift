@@ -37,7 +37,17 @@ class UITextBox: UITextField {
     @IBInspectable var highlightColor:UIColor   = UIColor(number: 0xEEF7FF) // 淡蓝色
     
     @IBInspectable var animateDuration:CGFloat = 0.4
-    weak var placeholderLabel:UILabel?
+    private weak var _placeholderLabel:UILabel?
+    var placeholderLabel:UILabel {
+        if _placeholderLabel == nil {
+            let label = UILabel(frame: super.placeholderRectForBounds(bounds))
+            label.font = font
+            setHighlightText(label, state: self._highlightState)
+            _placeholderLabel = label
+            addSubview(label)
+        }
+        return _placeholderLabel!
+    }
     
     @NSCopying private var _backgroundColor: UIColor? = nil
     override var backgroundColor: UIColor? {
@@ -51,17 +61,17 @@ class UITextBox: UITextField {
     }
     override var attributedPlaceholder: NSAttributedString? {
     didSet {
-        if let label = placeholderLabel {
+        if let label = _placeholderLabel {
             label.attributedText = super.attributedPlaceholder
-            self.layoutSubviews()
+            layoutSubviews()
         }
     }
     }
     override var placeholder:String? {
     didSet {
-        if let label = placeholderLabel {
+        if let label = _placeholderLabel {
             label.text = super.placeholder
-            self.layoutSubviews()
+            layoutSubviews()
         }
     }
     }
@@ -72,112 +82,63 @@ class UITextBox: UITextField {
     }
     var highlightState:UITextBoxHighlightState = .Default {
     didSet {
-        if let label = placeholderLabel {
-            setHighlightText(label, state: _highlightState)
-            self.layoutSubviews()
-        }
-        UIView.animateWithDuration(NSTimeInterval(animateDuration)) {
-            super.backgroundColor = self.getHighlightColor(self._highlightState)
-            
-        }
+        animationFirstResponder(isFirstResponder())
     }
     }
-    
-    
-//    override init(frame: CGRect) {
-//        super.init(frame: frame)
-//        self.addTarget(self, action: Selector("editingChanged"), forControlEvents: UIControlEvents.EditingChanged);
-//    }
-//    
-//    required init?(coder aDecoder: NSCoder) {
-//        super.init(coder: aDecoder)
-//        self.addTarget(self, action: Selector("editingChanged"), forControlEvents: UIControlEvents.EditingChanged);
-//    }
-//    
-//    func editingChanged() {
-//        print("editingChanged:\(text)")
-//    }
     
     //获得焦点时高亮动画
     override func becomeFirstResponder() -> Bool {
-        return animationFirstResponder(super.becomeFirstResponder())
+        let result = super.becomeFirstResponder()
+        animationFirstResponder(true)
+        return result
     }
     
     //失去焦点时取消高亮动画
     override func resignFirstResponder() -> Bool {
-        return animationFirstResponder(super.resignFirstResponder())
+        animationFirstResponder(false)
+        return super.resignFirstResponder()
     }
     
     //
-    private func animationFirstResponder(isFirstResponder:Bool) -> Bool {
-        UIView.animateWithDuration(NSTimeInterval(animateDuration)) {
+    private func animationFirstResponder(isFirstResponder:Bool) {
+        UIView.animateWithDuration(NSTimeInterval(animateDuration), delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveLinear, animations: {
             let color = self.getHighlightColor(self._highlightState)
             super.backgroundColor = color
-            if let label = self.placeholderLabel {
+            if let label = self._placeholderLabel {
                 self.setHighlightText(label, state: self._highlightState)
+                label.frame = self.placeholderRectAtRight(isFirstResponder || !(self.text ?? "").isEmpty)
             }
-        }
-        return isFirstResponder
+        }, completion: nil)
     }
-    
     
     //调整子控件布局
     override func layoutSubviews() {
         super.layoutSubviews()
-        let rect = super.placeholderRectForBounds(bounds)
-        if isFirstResponder() {
-            layoutPlaceholderLabel(rect,false)
-        } else if text == nil || text == "" {
-            layoutPlaceholderLabel(rect,true)
-        } else {
-            layoutPlaceholderLabel(rect,false)
-        }
+        _placeholderLabel?.frame = placeholderRectAtRight(isFirstResponder() || !(text ?? "").isEmpty)
     }
     
     override func willMoveToSuperview(newSuperview: UIView!)  {
         super.willMoveToSuperview(newSuperview)
-        if placeholderLabel == nil {
-            let rect = super.placeholderRectForBounds(bounds)
-            let label = UILabel(frame: rect)
-            label.font = self.font
-            setHighlightText(label, state: self._highlightState)
-            placeholderLabel = label
-            self.addSubview(label);
-        }
+        placeholderLabel.frame = placeholderRectAtRight(isFirstResponder() || !(text ?? "").isEmpty)
     }
     
     override func removeFromSuperview() {
-        self.placeholderLabel?.removeFromSuperview()
-        self.placeholderLabel = nil
+        self._placeholderLabel?.removeFromSuperview()
+        self._placeholderLabel = nil
         super.removeFromSuperview()
     }
     
 
     override func placeholderRectForBounds(bounds: CGRect) -> CGRect {
-        let rect = super.placeholderRectForBounds(bounds)
-        if placeholderLabel == nil {
-            let label = UILabel(frame: rect)
-            label.textColor = UIColor(white: 0.7, alpha: 1.0)
-            label.font = self.font
-            placeholderLabel = label
-            addSubview(label)
-        }
-        setHighlightText(placeholderLabel!, state: self._highlightState)
-        layoutPlaceholderLabel(rect,!isFirstResponder())
         return CGRect.zero
     }
     
-    
     //布局提示文本
-    func layoutPlaceholderLabel(rect: CGRect,_ left: Bool = false) {
-        guard let label = placeholderLabel else {
-            return
-        }
-        let size = label.sizeThatFits(rect.size)
-        let frame = left ? rect : CGRect(x: super.clearButtonRectForBounds(bounds).minX - size.width, y: rect.minY, width: size.width, height: rect.height)
-        UIView.animateWithDuration(NSTimeInterval(animateDuration), delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: UIViewAnimationOptions.CurveLinear, animations: {
-            label.frame = frame;
-        }, completion: nil)
+    func placeholderRectAtRight(right: Bool = false) -> CGRect {
+        let rect = super.placeholderRectForBounds(bounds)
+        let size = placeholderLabel.sizeThatFits(rect.size)
+        let frame = right ? CGRect(x: super.clearButtonRectForBounds(bounds).minX - size.width, y: rect.minY, width: size.width, height: rect.height) : rect
+        return frame
     }
     
     private func setHighlightText(label:UILabel, state:UITextBoxHighlightState) {
