@@ -163,14 +163,22 @@ class UITextBox: UITextField {
     }
     
     private func getBackgroundColorWithTextColor(color:UIColor) -> UIColor {
-        var r:CGFloat, g:CGFloat, b:CGFloat, a:CGFloat
+        var r:CGFloat = 0
+        var g:CGFloat = 0
+        var b:CGFloat = 0
+        var a:CGFloat = 0
         color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        r = 1 - r
+        g = 1 - g
+        b = 1 - b
+        return UIColor(red: r*r*0.7, green: g*g*0.7, blue: b*b*0.7, alpha: a)   // 同类颜色减淡一些
     }
     private func getTextColorWithHighlightColor(color:UIColor) -> UIColor {
         var r:CGFloat = 0
         var g:CGFloat = 0
         var b:CGFloat = 0
         var a:CGFloat = 0
+        
         color.getRed(&r, green: &g, blue: &b, alpha: &a)
         return UIColor(red: r*r*0.7, green: g*g*0.7, blue: b*b*0.7, alpha: a)   // 同类颜色加深一些
     }
