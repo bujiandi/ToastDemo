@@ -262,7 +262,7 @@ public struct Toast {
         var minDismissTime:NSTimeInterval = 0
         
         // 将超时的 Toast.Task 都加入移除队列
-        for var i:Int = tasksQueue.count - 1; i>=0; i-- {
+        for var i:Int = tasksQueue.count - 1; i>=0; i -= 1 {
             let task = tasksQueue[i]
 
             // 如果 Toast.Task 超时 则加入移除数组
@@ -340,7 +340,7 @@ public struct Toast {
         var offsetY:CGFloat = 0
         
         // 所有需显示的
-        for var i:Int = tasksQueue.count - 1; i>=0; i-- {
+        for var i:Int = tasksQueue.count - 1; i>=0; i -= 1 {
             let task = tasksQueue[i]
             
             var size = task.defaultSize
