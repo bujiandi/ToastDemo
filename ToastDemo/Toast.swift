@@ -171,7 +171,7 @@ public struct Toast {
         return label
     }
     static private func indexOfFirstNoneStyleWindowTask() -> Int {
-        for var i:Int = 0; i<windowQueue.count; i++ {
+        for i:Int in 0 ..< windowQueue.count {
             if !windowQueue[i].style.isModal { return i }
         }
         return windowQueue.count
@@ -205,10 +205,10 @@ public struct Toast {
     
     static private func registerViewControllerClass<T : UIViewController>(cls:T.Type) {
         if cls !== UIViewController.self {
-            let viewDidDisappearSelector = Selector("viewDidDisappear:")
+            let viewDidDisappearSelector = #selector(UIViewController.viewDidDisappear(_:))
             
             let viewDidDisappearMethod = class_getInstanceMethod(cls, viewDidDisappearSelector)
-            let taskDidDisappearMethod = class_getInstanceMethod(cls, "taskDidDisappear:")
+            let taskDidDisappearMethod = class_getInstanceMethod(cls, #selector(UIViewController.taskDidDisappear(_:)))
             
             let taskDidDisappearIMP = method_getImplementation(taskDidDisappearMethod)
             
@@ -217,13 +217,13 @@ public struct Toast {
             // 如果对象 没有 override func viewDidDisappear 则创建一个 并跳转到 taskDidDisappear
             if !class_addMethod(cls, viewDidDisappearSelector, taskDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
                 
-                let taskDidDisappearAndRecallMethod = class_getInstanceMethod(cls, "taskDidDisappearAndRecall:")
+                let taskDidDisappearAndRecallMethod = class_getInstanceMethod(cls, #selector(UIViewController.taskDidDisappearAndRecall(_:)))
                 let taskDidDisappearAndRecallIMP = method_getImplementation(taskDidDisappearAndRecallMethod)
 
                 // 如果 存在 override func viewDidDisappear 则将函数指针替换为 taskDidDisappear
                 viewDidDisappearIMP = class_replaceMethod(cls, viewDidDisappearSelector, taskDidDisappearAndRecallIMP, method_getTypeEncoding(viewDidDisappearMethod))
                 
-                let selfDidDisappearSelector = Selector("__selfDidDisappear:")
+                let selfDidDisappearSelector = #selector(UIViewController.__selfDidDisappear(_:))
                 // 并且 创建/替换 一个 __selfDidDisappear 函数为原 override func viewDidDisappear 的指针, 用于回调
                 if !class_addMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
                     class_replaceMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
@@ -262,7 +262,8 @@ public struct Toast {
         var minDismissTime:NSTimeInterval = 0
         
         // 将超时的 Toast.Task 都加入移除队列
-        for var i:Int = tasksQueue.count - 1; i>=0; i -= 1 {
+        for i in (0..<tasksQueue.count).reverse() {
+        //for var i:Int = tasksQueue.count - 1; i>=0; i -= 1 {
             let task = tasksQueue[i]
 
             // 如果 Toast.Task 超时 则加入移除数组
@@ -310,8 +311,8 @@ public struct Toast {
                     window.rootViewController?.view.hidden = false
                     if case .ModalCanCancel(let direction) = task.style {
                         // 如果是可自动终止的
-                        let tap = UITapGestureRecognizer(target: task, action: Selector("hide:"))
-                        let swipe = UISwipeGestureRecognizer(target: task, action: Selector("hide:"))
+                        let tap = UITapGestureRecognizer(target: task, action: #selector(WindowTask.hide(_:)))
+                        let swipe = UISwipeGestureRecognizer(target: task, action: #selector(WindowTask.hide(_:)))
                         swipe.direction = direction
                         window.rootViewController?.view.addGestureRecognizer(tap)
                         window.rootViewController?.view.addGestureRecognizer(swipe)
@@ -340,7 +341,8 @@ public struct Toast {
         var offsetY:CGFloat = 0
         
         // 所有需显示的
-        for var i:Int = tasksQueue.count - 1; i>=0; i -= 1 {
+        for i in (0..<tasksQueue.count).reverse() {
+        //for var i:Int = tasksQueue.count - 1; i>=0; i -= 1 {
             let task = tasksQueue[i]
             
             var size = task.defaultSize
