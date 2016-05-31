@@ -47,7 +47,9 @@ class ViewController: UIViewController {
         controller.view.frame.size = CGSize(width: 300, height: 250)
         controller.view.frame.origin.x = (UIScreen.mainScreen().bounds.width - 300) / 2
         controller.view.frame.origin.y = (UIScreen.mainScreen().bounds.height - 250) / 2
-        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel(cancelDirection: [.Up, .Down])).show()
+        
+        controller.view.autoresizingMask = [.FlexibleLeftMargin, .FlexibleRightMargin, .FlexibleTopMargin, .FlexibleWidth]
+        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel(cancelDirection: [.Up, .Down])).setAutoresizingMask([.FlexibleLeftMargin, .FlexibleRightMargin, .FlexibleBottomMargin, .FlexibleWidth]).show()
     }
     @IBAction func onButtonClick(sender:AnyObject!) {
         switch textBox.highlightState {

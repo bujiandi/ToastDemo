@@ -421,6 +421,10 @@ public struct Toast {
                 task.view.frame = task.frame
             }
         }) { (finish) -> Void in
+            for task:Task in animateTaskList {
+                task.view.autoresizingMask = task.autoresizingMask
+                print(task.autoresizingMask, "anim")
+            }
             // 动画结束时 将移除列表清空
             var hasWindowTask:Bool = false
             for task in cleanQueue {
@@ -465,13 +469,83 @@ public struct Toast {
 //        mach_absolute_time()
 //        CFAbsoluteTimeGetCurrent()
     }
+    
+    public class Task : Equatable {
+        
+        public let view:UIView
+        public var childController:UIViewController?
+        public weak var viewController:UIViewController?
+        
+        public var duration:NSTimeInterval = 0
+        private var autoresizingMask:UIViewAutoresizing = [.None]
+        private var dismissTime:NSTimeInterval = 0
+        private var defaultSize:CGSize
+        private var defaultCornerRadius:CGFloat = 8
+        private var cornerRadius:CGFloat = 8
+        private var frame:CGRect = CGRect.zero
+        private var alpha:CGFloat = 1
+        private var transform:CGAffineTransform = CGAffineTransformIdentity
+        private var onDismiss:(()->Void)?
+        
+        public init(controller:UIViewController, view:UIView) {
+            self.viewController = controller
+            self.view = view
+            self.transform = view.transform
+            self.defaultSize = view.bounds.size
+            self.cornerRadius = view.layer.cornerRadius
+            self.autoresizingMask = view.autoresizingMask
+            self.defaultCornerRadius = cornerRadius
+            print(view.autoresizingMask)
+            view.autoresizingMask = [.None]
+        }
+        
+        public func setAutoresizingMask(autoresizingMask:UIViewAutoresizing) -> Self {
+            self.autoresizingMask = autoresizingMask
+            print(self.autoresizingMask)
+            return self
+        }
+        
+        deinit {
+            view.removeFromSuperview()
+            childController?.view.removeFromSuperview()
+            childController?.removeFromParentViewController()
+            childController = nil
+            viewController = nil
+        }
+        
+        public func show(onDismiss:(()->Void)? = nil) {
+            self.onDismiss = onDismiss
+            dismissTime = CACurrentMediaTime() + duration + (Toast.tasksQueue.count > 2 ? Toast.minDismissTime : 0) // 计算消失时间
+            if let _ = Toast.tasksQueue.indexOf(self) {
+                return
+            }
+            Toast.tasksQueue.append(self)
+            Toast.animateTasks(false)
+        }
+        
+        public func hide() {
+            hideLater()
+            Toast.animateTasks(false)
+        }
+        
+        public func hideLater() {
+            if let index = Toast.tasksQueue.indexOf(self) {
+                Toast.tasksQueue.removeAtIndex(index)
+            }
+            if let _ = Toast.cleanQueue.indexOf(self) {
+                return
+            }
+            Toast.cleanQueue.append(self)
+        }
+        
+    }
 
     
     public class WindowTask : Task {
         
         private var orientation:UIInterfaceOrientation
-        private var style:ToastWindowStyle = ToastWindowStyle.None(timeout: 8)
-        public init(controller: UIViewController, view: UIView, style:ToastWindowStyle = ToastWindowStyle.None(timeout: 8)) {
+        private var style:ToastWindowStyle
+        public init(controller: UIViewController, view: UIView, style:ToastWindowStyle = .None(timeout: 8)) {
             self.style = style
             self.orientation = UIApplication.sharedApplication().statusBarOrientation
             super.init(controller: controller, view:view)
@@ -507,12 +581,12 @@ public struct Toast {
                 // 非模态信息一律加入队列
                 Toast.windowQueue.append(self)
             }
-            Toast.animateTasks()
+            Toast.animateTasks(false)
         }
         
         public override func hide() {
             hideLater()
-            Toast.animateTasks()
+            Toast.animateTasks(false)
         }
         
         public override func hideLater() {
@@ -592,66 +666,6 @@ public struct Toast {
                 Toast.windowQueue.insert(self, atIndex: Toast.indexOfFirstNoneStyleWindowTask())
             }
             Toast.animateTasks()
-        }
-        
-    }
-    
-    public class Task : Equatable {
-        
-        public let view:UIView
-        public var childController:UIViewController?
-        public weak var viewController:UIViewController?
-        
-        public var duration:NSTimeInterval = 0
-        private var dismissTime:NSTimeInterval = 0
-        private var defaultSize:CGSize
-        private var defaultCornerRadius:CGFloat = 8
-        private var cornerRadius:CGFloat = 8
-        private var frame:CGRect = CGRect.zero
-        private var alpha:CGFloat = 1
-        private var transform:CGAffineTransform = CGAffineTransformIdentity
-        private var onDismiss:(()->Void)?
-
-        public init(controller:UIViewController, view:UIView) {
-            self.viewController = controller
-            self.view = view
-            self.transform = view.transform
-            self.defaultSize = view.bounds.size
-            self.cornerRadius = view.layer.cornerRadius
-            self.defaultCornerRadius = cornerRadius
-        }
-        
-        deinit {
-            view.removeFromSuperview()
-            childController?.view.removeFromSuperview()
-            childController?.removeFromParentViewController()
-            childController = nil
-            viewController = nil
-        }
-        
-        public func show(onDismiss:(()->Void)? = nil) {
-            self.onDismiss = onDismiss
-            dismissTime = CACurrentMediaTime() + duration + (Toast.tasksQueue.count > 2 ? Toast.minDismissTime : 0) // 计算消失时间
-            if let _ = Toast.tasksQueue.indexOf(self) {
-                return
-            }
-            Toast.tasksQueue.append(self)
-            Toast.animateTasks(false)
-        }
-        
-        public func hide() {
-            hideLater()
-            Toast.animateTasks(false)
-        }
-        
-        public func hideLater() {
-            if let index = Toast.tasksQueue.indexOf(self) {
-                Toast.tasksQueue.removeAtIndex(index)
-            }
-            if let _ = Toast.cleanQueue.indexOf(self) {
-                return
-            }
-            Toast.cleanQueue.append(self)
         }
         
     }
