@@ -35,7 +35,7 @@ class ViewController: UIViewController {
     }
     @IBAction func onClose(sender:AnyObject!) {
         if Toast.windowTask === nil {
-            Toast.makeNotification(self, message: "notification content:\(++index)").show()
+            Toast.makeNotificationOnTop(self, message: "notification content:\(++index)lkjsalkfjsldjflksdajlfjsdal,falksjflj sa,fjsldajkfs,afjlsajf;aafkjlw;,fsaljfwjkfkjfldsa.f,").show()
         } else {
             Toast.windowTask?.hide()
         }
@@ -49,7 +49,7 @@ class ViewController: UIViewController {
         controller.view.frame.origin.y = (UIScreen.mainScreen().bounds.height - 250) / 2
         
         controller.view.autoresizingMask = [.FlexibleLeftMargin, .FlexibleRightMargin, .FlexibleTopMargin, .FlexibleWidth]
-        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel(cancelDirection: [.Up, .Down])).setAutoresizingMask([.FlexibleLeftMargin, .FlexibleRightMargin, .FlexibleBottomMargin, .FlexibleWidth]).show()
+        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel(cancelDirection: [.Up, .Down])).show()
     }
     @IBAction func onButtonClick(sender:AnyObject!) {
         switch textBox.highlightState {
