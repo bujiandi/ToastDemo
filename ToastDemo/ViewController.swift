@@ -34,12 +34,16 @@ class ViewController: UIViewController {
         Toast.makeText(self, message: "Toast \(contents[index++])", duration: 3).show()
     }
     @IBAction func onClose(sender:AnyObject!) {
-        if Toast.windowTask === nil {
-            Toast.makeNotificationOnTop(self, message: "notification content:\(++index)lkjsalkfjsldjflksdajlfjsdal,falksjflj sa,fjsldajkfs,afjlsajf;aafkjlw;,fsaljfwjkfkjfldsa.f,").show()
+        if Toast.windowModalTask === nil {
+//            if Toast.windowTask === nil {
+//                Toast.makeNotificationOnTop(self, message: "notification content:\(++index)").show()
+//            } else {
+//                Toast.windowTask?.hide()
+//            }
+            Toast.makeNotificationOnBottom(self, message: "notification content:\(++index)").show()
         } else {
-            Toast.windowTask?.hide()
+            Toast.windowModalTask?.hide()
         }
-        
     }
     @IBAction func onNotificationClick(sender:AnyObject!) {
         //Toast.makeNotification(self, message: "notification \(++index)", style: .ModalCanCancel([.Up, .Down])).show()
@@ -48,8 +52,9 @@ class ViewController: UIViewController {
         controller.view.frame.origin.x = (UIScreen.mainScreen().bounds.width - 300) / 2
         controller.view.frame.origin.y = (UIScreen.mainScreen().bounds.height - 250) / 2
         
-        controller.view.autoresizingMask = [.FlexibleLeftMargin, .FlexibleRightMargin, .FlexibleTopMargin, .FlexibleWidth]
-        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel(cancelDirection: [.Up, .Down])).show()
+        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel(cancelDirection: [.Up, .Down]))
+            .setAutoresizingMask([.FlexibleWidth, .FlexibleTopMargin, .FlexibleBottomMargin])
+            .show()
     }
     @IBAction func onButtonClick(sender:AnyObject!) {
         switch textBox.highlightState {
