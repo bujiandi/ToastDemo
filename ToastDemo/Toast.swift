@@ -31,6 +31,7 @@ public enum ToastWindowStyle {
 
 public struct Toast {
 
+    static public var shadowColor:UIColor = UIColor(white: 0.2, alpha: 1)
     static public var fontSize:CGFloat = 13
     static public var interval:CGFloat = 5     // 默认 Toast.Task 间隔
     
@@ -158,9 +159,10 @@ public struct Toast {
         
         backgroundView.addSubview(view)
         backgroundView.backgroundColor = view.backgroundColor
-        backgroundView.layer.shadowColor = UIColor(white: 0.2, alpha: 1).CGColor
+        backgroundView.layer.shadowColor = shadowColor.CGColor
         backgroundView.layer.shadowOpacity = 0.8
-        backgroundView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        backgroundView.layer.shadowOffset = CGSize(width: 0, height: 1)
+        backgroundView.layer.shadowRadius = 5
         backgroundView.layer.cornerRadius = 7
         backgroundView.autoresizingMask = view.autoresizingMask
         view.backgroundColor = UIColor.clearColor()
@@ -178,7 +180,7 @@ public struct Toast {
     }
     
     /// 显示自定义控制器的视图
-    static public func makeCustomView(parentController:UIViewController, toastController:UIViewController, duration: NSTimeInterval = 8) -> Task {
+    static public func makeCustomView(parentController:UIViewController, toastController:UIViewController, duration: NSTimeInterval = 5) -> Task {
         let task = Task(controller: parentController, view:toastController.view)
         task.childController = toastController
         task.duration = duration
@@ -186,21 +188,21 @@ public struct Toast {
     }
     
     /// 显示带背景 View 的自定义控制器的视图
-    static public func makeView(parentController:UIViewController, toastController:UIViewController, duration: NSTimeInterval = 8) -> Task {
+    static public func makeView(parentController:UIViewController, toastController:UIViewController, duration: NSTimeInterval = 5) -> Task {
         let task = makeView(parentController, childView: toastController.view, duration: duration)
         task.childController = toastController
         return task
     }
     
     /// 显示自定义视图
-    static public func makeCustomView(parentController:UIViewController, view:UIView, duration: NSTimeInterval = 8) -> Task {
+    static public func makeCustomView(parentController:UIViewController, view:UIView, duration: NSTimeInterval = 5) -> Task {
         let task = Task(controller: parentController, view:view)
         task.duration = duration
         return task
     }
     
     /// 显示带背景 View 的自定义视图
-    static public func makeView(parentController:UIViewController, childView child:UIView, duration: NSTimeInterval = 8) -> Task {
+    static public func makeView(parentController:UIViewController, childView child:UIView, duration: NSTimeInterval = 5) -> Task {
         let font = UIFont.systemFontOfSize(Toast.fontSize)
         let maxHeight = font.lineHeight * 2
         let backgroundView = makeBackgroundByView(child)
@@ -209,10 +211,10 @@ public struct Toast {
     }
     
     /// 显示文本通知视图
-    static public func makeText(controller:UIViewController, message:String, duration: NSTimeInterval = 8) -> Task {
+    static public func makeText(controller:UIViewController, message:String, duration: NSTimeInterval = 5) -> Task {
         return makeView(controller, childView: makeLabel(message, numberOfLines:3), duration: duration)
     }
-    static public func makeText(controller:UIViewController, message:NSAttributedString, duration: NSTimeInterval = 8) -> Task {
+    static public func makeText(controller:UIViewController, message:NSAttributedString, duration: NSTimeInterval = 5) -> Task {
         return makeView(controller, childView: makeLabel(message, numberOfLines:3), duration: duration)
     }
     
@@ -264,6 +266,13 @@ public struct Toast {
     static private func taskFilterWithController(controller:UIViewController) -> [Task] {
         var tasks:[Task] = []
         
+        // 已显示的模态窗口 Toast.WindowTask
+        if let task = windowModalTask {
+            if let viewController = task.viewController {
+                if controller === viewController { tasks.append(task) }
+            }
+        }
+        
         // 已显示的窗口 Toast.WindowTask
         if let task = windowTask {
             if let viewController = task.viewController {
@@ -273,6 +282,13 @@ public struct Toast {
         
         // 将要显示的窗口 Toast.WindowTask
         for task in windowQueue {
+            if let viewController = task.viewController {
+                if controller === viewController { tasks.append(task) }
+            }
+        }
+        
+        // 将要显示的模态窗口 Toast.WindowTask
+        for task in windowModalQueue {
             if let viewController = task.viewController {
                 if controller === viewController { tasks.append(task) }
             }
@@ -775,6 +791,7 @@ public struct Toast {
             view.addSubview(label)
             
             super.init(controller: controller, view: view, style: style)
+            autoresizingMask = [.FlexibleLeftMargin, .FlexibleRightMargin, .FlexibleTopMargin, .FlexibleBottomMargin]
         }
         
         override public func show(onDismiss: (() -> Void)? = nil) {
