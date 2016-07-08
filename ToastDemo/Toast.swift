@@ -431,8 +431,12 @@ public struct Toast {
                     let tap = UITapGestureRecognizer(target: task, action: #selector(WindowTask.hide(_:)))
                     let swipe = UISwipeGestureRecognizer(target: task, action: #selector(WindowTask.hide(_:)))
                     swipe.direction = direction
-                    window.rootViewController?.view.addGestureRecognizer(tap)
-                    window.rootViewController?.view.addGestureRecognizer(swipe)
+                    if let rootController = window.rootViewController as? OverlayRootController {
+                        tap.delegate = rootController
+                        swipe.delegate = rootController
+                        rootController.view.addGestureRecognizer(tap)
+                        rootController.view.addGestureRecognizer(swipe)
+                    }
                 }
                 if let controller = task.childController {
                     window.rootViewController?.addChildViewController(controller)
@@ -444,7 +448,8 @@ public struct Toast {
             _overlayWindow!.rootViewController!.view.backgroundColor = color
 
             task.alpha = 1
-            _overlayWindow!.hidden = false
+            //_overlayWindow!.hidden = false
+            _overlayWindow!.makeKeyAndVisible()
         }
         
         // 下次动画时间 不小于一次动画的间隔
@@ -835,11 +840,21 @@ class OverlayToastView : UIView {
     
 }
 
-class OverlayRootController: UIViewController {
+class OverlayRootController: UIViewController, UIGestureRecognizerDelegate {
     
     override func loadView() {
         view = OverlayToastView(frame: UIScreen.mainScreen().bounds)
         view.backgroundColor = UIColor.clearColor()
+    }
+    
+    func gestureRecognizerShouldBegin(gestureRecognizer: UIGestureRecognizer) -> Bool {
+        let point = gestureRecognizer.locationInView(view)
+        for subView in view.subviews {
+            if CGRectContainsPoint(subView.frame, point) {
+                return false
+            }
+        }
+        return true
     }
     
 }

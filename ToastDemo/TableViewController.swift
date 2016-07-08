@@ -148,6 +148,10 @@ class TableViewController: UITableViewController {
             Toast.makeActivity(self, message: "activity view is show:\(++index)", style: .None(timeout: 300)).show()
         }
     }
+    
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        print(indexPath,"didSelectRowAtIndexPath")
+    }
 //    override func viewDidDisappear(animated: Bool) {
 //        super.viewWillDisappear(animated)
 //        print("viewDidDisappear Table")
