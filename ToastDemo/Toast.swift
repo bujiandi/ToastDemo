@@ -448,8 +448,8 @@ public struct Toast {
             _overlayWindow!.rootViewController!.view.backgroundColor = color
 
             task.alpha = 1
-            //_overlayWindow!.hidden = false
-            _overlayWindow!.makeKeyAndVisible()
+            _overlayWindow!.hidden = false
+            //_overlayWindow!.makeKeyAndVisible()
         }
         
         // 下次动画时间 不小于一次动画的间隔
@@ -567,7 +567,7 @@ public struct Toast {
                 _overlayWindow?.rootViewController = nil
                 _overlayWindow?.removeFromSuperview()
                 _overlayWindow = nil
-                //print("动画结束干掉窗口 windowTask:\(windowTask)")
+                // print("动画结束干掉窗口 windowTask:\(windowTask)")
             }
             cleanQueue.removeAll()
         }
