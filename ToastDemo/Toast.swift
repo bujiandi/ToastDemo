@@ -305,32 +305,32 @@ public struct Toast {
     }
     
     static private func registerViewControllerClass<T : UIViewController>(cls:T.Type) {
-        if cls !== UIViewController.self {
-            let viewDidDisappearSelector = #selector(UIViewController.viewDidDisappear(_:))
+        if cls === UIViewController.self || cls === UIImagePickerController.self {
+            return
+        }
+        let viewDidDisappearSelector = #selector(UIViewController.viewDidDisappear(_:))
+        
+        let viewDidDisappearMethod = class_getInstanceMethod(cls, viewDidDisappearSelector)
+        let taskDidDisappearMethod = class_getInstanceMethod(cls, #selector(UIViewController.taskDidDisappear(_:)))
+        
+        let taskDidDisappearIMP = method_getImplementation(taskDidDisappearMethod)
+        
+        var viewDidDisappearIMP:IMP = nil
+        
+        // 如果对象 没有 override func viewDidDisappear 则创建一个 并跳转到 taskDidDisappear
+        if !class_addMethod(cls, viewDidDisappearSelector, taskDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
             
-            let viewDidDisappearMethod = class_getInstanceMethod(cls, viewDidDisappearSelector)
-            let taskDidDisappearMethod = class_getInstanceMethod(cls, #selector(UIViewController.taskDidDisappear(_:)))
+            let taskDidDisappearAndRecallMethod = class_getInstanceMethod(cls, #selector(UIViewController.taskDidDisappearAndRecall(_:)))
+            let taskDidDisappearAndRecallIMP = method_getImplementation(taskDidDisappearAndRecallMethod)
             
-            let taskDidDisappearIMP = method_getImplementation(taskDidDisappearMethod)
+            // 如果 存在 override func viewDidDisappear 则将函数指针替换为 taskDidDisappear
+            viewDidDisappearIMP = class_replaceMethod(cls, viewDidDisappearSelector, taskDidDisappearAndRecallIMP, method_getTypeEncoding(viewDidDisappearMethod))
             
-            var viewDidDisappearIMP:IMP = nil
-            
-            // 如果对象 没有 override func viewDidDisappear 则创建一个 并跳转到 taskDidDisappear
-            if !class_addMethod(cls, viewDidDisappearSelector, taskDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
-                
-                let taskDidDisappearAndRecallMethod = class_getInstanceMethod(cls, #selector(UIViewController.taskDidDisappearAndRecall(_:)))
-                let taskDidDisappearAndRecallIMP = method_getImplementation(taskDidDisappearAndRecallMethod)
-
-                // 如果 存在 override func viewDidDisappear 则将函数指针替换为 taskDidDisappear
-                viewDidDisappearIMP = class_replaceMethod(cls, viewDidDisappearSelector, taskDidDisappearAndRecallIMP, method_getTypeEncoding(viewDidDisappearMethod))
-                
-                let selfDidDisappearSelector = #selector(UIViewController.__selfDidDisappear(_:))
-                // 并且 创建/替换 一个 __selfDidDisappear 函数为原 override func viewDidDisappear 的指针, 用于回调
-                if !class_addMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
-                    class_replaceMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
-                }
+            let selfDidDisappearSelector = #selector(UIViewController.__selfDidDisappear(_:))
+            // 并且 创建/替换 一个 __selfDidDisappear 函数为原 override func viewDidDisappear 的指针, 用于回调
+            if !class_addMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
+                class_replaceMethod(cls, selfDidDisappearSelector, viewDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod))
             }
-
         }
     }
     
@@ -887,9 +887,7 @@ extension UIViewController {
     }
     
     final func taskDidDisappear(animated: Bool) {
-        //self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
         
-        //print("已还原 self=\(self) count:\(Toast.taskFilterWithController(self).count)")
         // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
         for task in Toast.taskFilterWithController(self) {
             task.hideLater()
