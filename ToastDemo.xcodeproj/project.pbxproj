@@ -9,14 +9,12 @@
 /* Begin PBXBuildFile section */
 		391238181B6DFD5100A9F76F /* LinkedDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 391238171B6DFD5100A9F76F /* LinkedDictionary.swift */; };
 		3912381C1B6E0CE400A9F76F /* OrderedSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3912381B1B6E0CE400A9F76F /* OrderedSet.swift */; };
-		3952EB311B74985100DB5A63 /* OArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3952EB301B74985100DB5A63 /* OArray.swift */; };
 		395F69D81B64D215001EC471 /* UITextBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F69D71B64D215001EC471 /* UITextBox.swift */; };
 		395F6AAC1B5E67D300E7F944 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F6AAB1B5E67D300E7F944 /* AppDelegate.swift */; };
 		395F6AAE1B5E67D300E7F944 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395F6AAD1B5E67D300E7F944 /* ViewController.swift */; };
 		395F6AB11B5E67D300E7F944 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 395F6AAF1B5E67D300E7F944 /* Main.storyboard */; };
 		395F6AB31B5E67D300E7F944 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 395F6AB21B5E67D300E7F944 /* Assets.xcassets */; };
 		395F6AB61B5E67D300E7F944 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 395F6AB41B5E67D300E7F944 /* LaunchScreen.storyboard */; };
-		39AFFB4D1CFD6827000F017A /* Operator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AFFB4C1CFD6827000F017A /* Operator.swift */; };
 		39D4230E1B5E6ADC00FC808A /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D4230D1B5E6ADC00FC808A /* TableViewController.swift */; };
 		39D423101B5E6AFC00FC808A /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D4230F1B5E6AFC00FC808A /* Toast.swift */; };
 /* End PBXBuildFile section */
@@ -24,7 +22,6 @@
 /* Begin PBXFileReference section */
 		391238171B6DFD5100A9F76F /* LinkedDictionary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkedDictionary.swift; sourceTree = "<group>"; };
 		3912381B1B6E0CE400A9F76F /* OrderedSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrderedSet.swift; sourceTree = "<group>"; };
-		3952EB301B74985100DB5A63 /* OArray.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OArray.swift; path = ../../../SwiftFramework/CustomArrayAndDictionary/CustomArrayAndDictionary/OArray.swift; sourceTree = "<group>"; };
 		395F69D71B64D215001EC471 /* UITextBox.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextBox.swift; sourceTree = "<group>"; };
 		395F6AA81B5E67D300E7F944 /* ToastDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToastDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		395F6AAB1B5E67D300E7F944 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -33,7 +30,6 @@
 		395F6AB21B5E67D300E7F944 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		395F6AB51B5E67D300E7F944 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		395F6AB71B5E67D300E7F944 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		39AFFB4C1CFD6827000F017A /* Operator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Operator.swift; path = "../../../SwiftFramework/Swift-UtilsFramework/SwiftFrameworks/extension/Operator.swift"; sourceTree = "<group>"; };
 		39D4230D1B5E6ADC00FC808A /* TableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 		39D4230F1B5E6AFC00FC808A /* Toast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -72,9 +68,7 @@
 				395F6AAD1B5E67D300E7F944 /* ViewController.swift */,
 				39D4230D1B5E6ADC00FC808A /* TableViewController.swift */,
 				391238171B6DFD5100A9F76F /* LinkedDictionary.swift */,
-				3952EB301B74985100DB5A63 /* OArray.swift */,
 				3912381B1B6E0CE400A9F76F /* OrderedSet.swift */,
-				39AFFB4C1CFD6827000F017A /* Operator.swift */,
 				39D4230F1B5E6AFC00FC808A /* Toast.swift */,
 				395F69D71B64D215001EC471 /* UITextBox.swift */,
 				395F6AAF1B5E67D300E7F944 /* Main.storyboard */,
@@ -160,9 +154,7 @@
 				395F6AAE1B5E67D300E7F944 /* ViewController.swift in Sources */,
 				39D423101B5E6AFC00FC808A /* Toast.swift in Sources */,
 				39D4230E1B5E6ADC00FC808A /* TableViewController.swift in Sources */,
-				3952EB311B74985100DB5A63 /* OArray.swift in Sources */,
 				391238181B6DFD5100A9F76F /* LinkedDictionary.swift in Sources */,
-				39AFFB4D1CFD6827000F017A /* Operator.swift in Sources */,
 				395F6AAC1B5E67D300E7F944 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
