@@ -115,7 +115,7 @@ class TableViewController: UITableViewController {
 //        }
     }
 
-    override func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         cell.separatorInset.left = 0
         cell.layoutMargins.left = 0
     }
@@ -126,7 +126,7 @@ class TableViewController: UITableViewController {
     }
 
     var index:Int = 0
-    @IBAction func onToast(sender:AnyObject!) {
+    @IBAction func onToast(_ sender:AnyObject!) {
         //print("showToast")
         //Toast.makeActivity(self, message: "activity view \(++index)").show()
         //Toast.makeNotification(self, message: "isadlkfjlkadsjflkasdjlkf jsdlkajflkadsjflkjadslfjal;sdkj ljdsklajf lkjasljf s to later = \(++index)", style: .None(5)).show()
@@ -134,22 +134,24 @@ class TableViewController: UITableViewController {
         if let activityToast = Toast.activityTask {
             activityToast.hide()
         } else {
-            Toast.makeActivity(self, message: "activity view is show:\(++index)", style: .None(timeout: 300)).show()
+            index += 1
+            Toast.makeActivity(self, message: "activity view is show:\(index)", style: .none(timeout: 300)).show()
         }
         
         //Toast.makeText(self, message: "Toast \(++index)", duration: 3).show()
 
     }
     
-    @IBAction func onActivityToast(sender:AnyObject) {
+    @IBAction func onActivityToast(_ sender:AnyObject) {
         if let activityToast = Toast.activityTask {
             activityToast.hide()
         } else {
-            Toast.makeActivity(self, message: "activity view is show:\(++index)", style: .None(timeout: 300)).show()
+            index += 1
+            Toast.makeActivity(self, message: "activity view is show:\(index)", style: .none(timeout: 300)).show()
         }
     }
     
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print(indexPath,"didSelectRowAtIndexPath")
     }
 //    override func viewDidDisappear(animated: Bool) {

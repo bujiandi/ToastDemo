@@ -17,13 +17,13 @@ extension UISwipeGestureRecognizerDirection {
 }
 
 public enum ToastWindowStyle {
-    case None (timeout: NSTimeInterval)
-    case Modal
-    case ModalCanCancel (cancelDirection: UISwipeGestureRecognizerDirection)
+    case none (timeout: TimeInterval)
+    case modal
+    case modalCanCancel (cancelDirection: UISwipeGestureRecognizerDirection)
     
     var isModal:Bool {
         switch self {
-        case .None( _): return false
+        case .none( _): return false
         default: return true
         }
     }
@@ -61,20 +61,20 @@ public struct Toast {
         // 为其分配最佳内存大小 (已显示的Task + windowTask)
         tasks.reserveCapacity(tasksQueue.count + 1)
         if let task = windowTask { tasks.append(task) }
-        tasks.appendContentsOf(tasksQueue)
+        tasks.append(contentsOf: tasksQueue)
         return tasks
     }
     
-    static private var _overlayWindow:UIWindow?//OverlayWindow? = nil
-    static private var overlayWindow:UIWindow { //OverlayWindow {
+    static fileprivate var _overlayWindow:UIWindow?//OverlayWindow? = nil
+    static fileprivate var overlayWindow:UIWindow { //OverlayWindow {
         
         if _overlayWindow == nil {
-            let window = UIWindow(frame: UIScreen.mainScreen().bounds) //OverlayWindow(frame: UIScreen.mainScreen().bounds)
-            window.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
-            window.userInteractionEnabled = true    // 支持手势
-            window.backgroundColor = UIColor.clearColor()
+            let window = UIWindow(frame: UIScreen.main.bounds) //OverlayWindow(frame: UIScreen.mainScreen().bounds)
+            window.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            window.isUserInteractionEnabled = true    // 支持手势
+            window.backgroundColor = UIColor.clear
             window.windowLevel = UIWindowLevelStatusBar
-            window.transform = UIApplication.sharedApplication().keyWindow?.transform ?? CGAffineTransformIdentity
+            window.transform = UIApplication.shared.keyWindow?.transform ?? CGAffineTransform.identity
             window.rootViewController = OverlayRootController() //UIViewController()
             _overlayWindow = window
         }
@@ -82,76 +82,76 @@ public struct Toast {
     }
     /// - 构造Toast
     /// 构造一个顶部通知
-    static public func makeNotificationOnTop(parentController:UIViewController, view:UIView, style:ToastWindowStyle = .None(timeout: 8)) -> WindowTask {
+    static public func makeNotificationOnTop(_ parentController:UIViewController, view:UIView, style:ToastWindowStyle = .none(timeout: 8)) -> WindowTask {
         let task = makeWindow(parentController, view: view, style: style)
         task.cornerRadius = 0
         task.view.layer.cornerRadius = 0
-        task.view.frame = CGRectMake(0, -20, UIScreen.mainScreen().bounds.width, task.view.frame.height + 20)
+        task.view.frame = CGRect(x: 0, y: -20, width: UIScreen.main.bounds.width, height: task.view.frame.height + 20)
         task.defaultSize = task.view.frame.size
         view.frame.origin.y += 20
-        view.autoresizingMask = [.FlexibleWidth]
-        task.autoresizingMask = [.FlexibleWidth, .FlexibleBottomMargin]
+        view.autoresizingMask = [.flexibleWidth]
+        task.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
         return task
     }
     /// 构造一个中部通知
-    static public func makeNotificationOnCenter(parentController:UIViewController, view:UIView, style:ToastWindowStyle = .None(timeout: 8)) -> WindowTask {
+    static public func makeNotificationOnCenter(_ parentController:UIViewController, view:UIView, style:ToastWindowStyle = .none(timeout: 8)) -> WindowTask {
         let task = makeWindow(parentController, view: view, style: style)
-        let size = UIScreen.mainScreen().bounds.size
-        task.view.center = CGPointMake(size.width / 2, size.height / 2)
+        let size = UIScreen.main.bounds.size
+        task.view.center = CGPoint(x: size.width / 2, y: size.height / 2)
         task.defaultSize = task.view.frame.size
-        view.autoresizingMask = [.FlexibleWidth]
-        task.autoresizingMask = [.FlexibleWidth, .FlexibleTopMargin, .FlexibleBottomMargin]
+        view.autoresizingMask = [.flexibleWidth]
+        task.autoresizingMask = [.flexibleWidth, .flexibleTopMargin, .flexibleBottomMargin]
         return task
     }
     /// 构造一个底部通知
-    static public func makeNotificationOnBottom(parentController:UIViewController, view:UIView, style:ToastWindowStyle = .None(timeout: 8)) -> WindowTask {
+    static public func makeNotificationOnBottom(_ parentController:UIViewController, view:UIView, style:ToastWindowStyle = .none(timeout: 8)) -> WindowTask {
         let task = makeWindow(parentController, view: view, style: style)
         task.cornerRadius = 0
         task.view.layer.cornerRadius = 0
         let height = task.view.frame.height
-        let screenHeight = UIScreen.mainScreen().bounds.height
-        task.view.frame = CGRectMake(0, screenHeight - height, UIScreen.mainScreen().bounds.width, height + 20)
+        let screenHeight = UIScreen.main.bounds.height
+        task.view.frame = CGRect(x: 0, y: screenHeight - height, width: UIScreen.main.bounds.width, height: height + 20)
         task.defaultSize = task.view.frame.size
-        view.autoresizingMask = [.FlexibleWidth]
-        task.autoresizingMask = [.FlexibleWidth, .FlexibleTopMargin]
+        view.autoresizingMask = [.flexibleWidth]
+        task.autoresizingMask = [.flexibleWidth, .flexibleTopMargin]
         return task
     }
-    static private func updateNotificationLabel(label:UILabel) {
+    static fileprivate func updateNotificationLabel(_ label:UILabel) {
         let insets = label.layoutMargins
-        label.frame.size.width = UIScreen.mainScreen().bounds.width - insets.left - insets.right
-        label.textAlignment = NSTextAlignment.Center
-        label.backgroundColor = UIColor.darkGrayColor()
+        label.frame.size.width = UIScreen.main.bounds.width - insets.left - insets.right
+        label.textAlignment = NSTextAlignment.center
+        label.backgroundColor = UIColor.darkGray
     }
     /// 构造一个纯文字顶部通知
-    static public func makeNotificationOnTop(parentController:UIViewController, message:String, style:ToastWindowStyle = .None(timeout: 8)) -> WindowTask {
+    static public func makeNotificationOnTop(_ parentController:UIViewController, message:String, style:ToastWindowStyle = .none(timeout: 8)) -> WindowTask {
         let label = makeLabel(message, numberOfLines:3)
         updateNotificationLabel(label)
         return makeNotificationOnTop(parentController, view: label, style: style)
     }
     /// 构造一个富文本顶部通知
-    static public func makeNotificationOnTop(parentController:UIViewController, message:NSAttributedString, style:ToastWindowStyle = .None(timeout: 8)) -> WindowTask {
+    static public func makeNotificationOnTop(_ parentController:UIViewController, message:NSAttributedString, style:ToastWindowStyle = .none(timeout: 8)) -> WindowTask {
         let label = makeLabel(message, numberOfLines:3)
         updateNotificationLabel(label)
         return makeNotificationOnTop(parentController, view: label, style: style)
     }
-    static public func makeNotificationOnBottom(parentController:UIViewController, message:String, style:ToastWindowStyle = .None(timeout: 8)) -> WindowTask {
+    static public func makeNotificationOnBottom(_ parentController:UIViewController, message:String, style:ToastWindowStyle = .none(timeout: 8)) -> WindowTask {
         let label = makeLabel(message, numberOfLines:3)
         updateNotificationLabel(label)
         return makeNotificationOnBottom(parentController, view: label, style: style)
     }
-    static public func makeNotificationOnBottom(parentController:UIViewController, message:NSAttributedString, style:ToastWindowStyle = .None(timeout: 8)) -> WindowTask {
+    static public func makeNotificationOnBottom(_ parentController:UIViewController, message:NSAttributedString, style:ToastWindowStyle = .none(timeout: 8)) -> WindowTask {
         let label = makeLabel(message, numberOfLines:3)
         updateNotificationLabel(label)
         return makeNotificationOnBottom(parentController, view: label, style: style)
     }
     
     /// create a controller Toast.Task
-    static public func makeWindow(parentController:UIViewController, toastController:UIViewController, style:ToastWindowStyle = .Modal) -> WindowTask {
+    static public func makeWindow(_ parentController:UIViewController, toastController:UIViewController, style:ToastWindowStyle = .modal) -> WindowTask {
         let task = makeWindow(parentController, view: toastController.view, style: style)
         task.childController = toastController
         return task
     }
-    static private func makeBackgroundByView(view:UIView) -> UIView {
+    static fileprivate func makeBackgroundByView(_ view:UIView) -> UIView {
         let insets = view.layoutMargins
         let backgroundView = UIView(frame: CGRect(x: view.frame.minX - insets.left, y: view.frame.minY - insets.top, width: view.frame.width + insets.left + insets.right, height: view.frame.height + insets.top + insets.bottom))
         
@@ -159,28 +159,28 @@ public struct Toast {
         
         backgroundView.addSubview(view)
         backgroundView.backgroundColor = view.backgroundColor
-        backgroundView.layer.shadowColor = shadowColor.CGColor
+        backgroundView.layer.shadowColor = shadowColor.cgColor
         backgroundView.layer.shadowOpacity = 0.8
         backgroundView.layer.shadowOffset = CGSize(width: 0, height: 1)
         backgroundView.layer.shadowRadius = 5
         backgroundView.layer.cornerRadius = 7
         backgroundView.autoresizingMask = view.autoresizingMask
-        view.backgroundColor = UIColor.clearColor()
+        view.backgroundColor = UIColor.clear
         
         return backgroundView
     }
     /// create a view Toast.Task, has black background and shadow
-    static public func makeWindow(parentController:UIViewController, view:UIView, style:ToastWindowStyle = .Modal) -> WindowTask {
+    static public func makeWindow(_ parentController:UIViewController, view:UIView, style:ToastWindowStyle = .modal) -> WindowTask {
         return WindowTask(controller: parentController, view: makeBackgroundByView(view), style:style)
     }
     
     /// 显示活动等待视图
-    static public func makeActivity(parentController:UIViewController, message:String, style:ToastWindowStyle = .Modal) -> ActivityTask {
+    static public func makeActivity(_ parentController:UIViewController, message:String, style:ToastWindowStyle = .modal) -> ActivityTask {
         return ActivityTask(controller: parentController, message: message, style: style)
     }
     
     /// 显示自定义控制器的视图
-    static public func makeCustomView(parentController:UIViewController, toastController:UIViewController, duration: NSTimeInterval = 5) -> Task {
+    static public func makeCustomView(_ parentController:UIViewController, toastController:UIViewController, duration: TimeInterval = 5) -> Task {
         let task = Task(controller: parentController, view:toastController.view)
         task.childController = toastController
         task.duration = duration
@@ -188,22 +188,22 @@ public struct Toast {
     }
     
     /// 显示带背景 View 的自定义控制器的视图
-    static public func makeView(parentController:UIViewController, toastController:UIViewController, duration: NSTimeInterval = 5) -> Task {
+    static public func makeView(_ parentController:UIViewController, toastController:UIViewController, duration: TimeInterval = 5) -> Task {
         let task = makeView(parentController, childView: toastController.view, duration: duration)
         task.childController = toastController
         return task
     }
     
     /// 显示自定义视图
-    static public func makeCustomView(parentController:UIViewController, view:UIView, duration: NSTimeInterval = 5) -> Task {
+    static public func makeCustomView(_ parentController:UIViewController, view:UIView, duration: TimeInterval = 5) -> Task {
         let task = Task(controller: parentController, view:view)
         task.duration = duration
         return task
     }
     
     /// 显示带背景 View 的自定义视图
-    static public func makeView(parentController:UIViewController, childView child:UIView, duration: NSTimeInterval = 5) -> Task {
-        let font = UIFont.systemFontOfSize(Toast.fontSize)
+    static public func makeView(_ parentController:UIViewController, childView child:UIView, duration: TimeInterval = 5) -> Task {
+        let font = UIFont.systemFont(ofSize: Toast.fontSize)
         let maxHeight = font.lineHeight * 2
         let backgroundView = makeBackgroundByView(child)
         backgroundView.layer.cornerRadius = (backgroundView.frame.height > maxHeight ? font.lineHeight : backgroundView.frame.height) / 2
@@ -211,24 +211,24 @@ public struct Toast {
     }
     
     /// 显示文本通知视图
-    static public func makeText(controller:UIViewController, message:String, duration: NSTimeInterval = 5) -> Task {
+    static public func makeText(_ controller:UIViewController, message:String, duration: TimeInterval = 5) -> Task {
         return makeView(controller, childView: makeLabel(message, numberOfLines:3), duration: duration)
     }
-    static public func makeText(controller:UIViewController, message:NSAttributedString, duration: NSTimeInterval = 5) -> Task {
+    static public func makeText(_ controller:UIViewController, message:NSAttributedString, duration: TimeInterval = 5) -> Task {
         return makeView(controller, childView: makeLabel(message, numberOfLines:3), duration: duration)
     }
     
     // 根据文本内容创建 UILabel
-    static private func makeLabel(message:String, numberOfLines:Int) -> UILabel {
-        let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
+    static fileprivate func makeLabel(_ message:String, numberOfLines:Int) -> UILabel {
+        let screenSize = UIApplication.shared.keyWindow?.frame.size ?? UIScreen.main.bounds.size
         let insets = UIEdgeInsets(top: 2, left: 10, bottom: 2, right: 10)
         let screenWidth = screenSize.width - insets.left - insets.right
         
         let label:UILabel = UILabel()
-        label.font = UIFont.systemFontOfSize(Toast.fontSize)
+        label.font = UIFont.systemFont(ofSize: Toast.fontSize)
         label.numberOfLines = numberOfLines
         label.text = message
-        label.textColor = UIColor.whiteColor()
+        label.textColor = UIColor.white
         label.layoutMargins = insets
         let size = label.sizeThatFits(CGSize(width: screenWidth, height: label.font.lineHeight * CGFloat(label.numberOfLines)))
         
@@ -238,18 +238,18 @@ public struct Toast {
         return label
     }
     // 根据富文本内容创建UILabel
-    static private func makeLabel(message:NSAttributedString, numberOfLines:Int) -> UILabel {
-        let screenSize = UIApplication.sharedApplication().keyWindow?.frame.size ?? UIScreen.mainScreen().bounds.size
+    static fileprivate func makeLabel(_ message:NSAttributedString, numberOfLines:Int) -> UILabel {
+        let screenSize = UIApplication.shared.keyWindow?.frame.size ?? UIScreen.main.bounds.size
         let insets = UIEdgeInsets(top: 2, left: 10, bottom: 2, right: 10)
         let screenWidth = screenSize.width - insets.left - insets.right
         
         let label:UILabel = UILabel()
-        label.font = UIFont.systemFontOfSize(Toast.fontSize)
+        label.font = UIFont.systemFont(ofSize: Toast.fontSize)
         label.numberOfLines = numberOfLines
         label.attributedText = message
-        label.textColor = UIColor.whiteColor()
+        label.textColor = UIColor.white
         label.layoutMargins = insets
-        let size = label.textRectForBounds(CGRectMake(0, 0, screenWidth, UIScreen.mainScreen().bounds.height), limitedToNumberOfLines: numberOfLines).size
+        let size = label.textRect(forBounds: CGRect(x: 0, y: 0, width: screenWidth, height: UIScreen.main.bounds.height), limitedToNumberOfLines: numberOfLines).size
         
         label.frame.size = size//CGSizeMake(screenWidth, height)
         label.backgroundColor = UIColor(white: 0.2, alpha: 0.6)
@@ -257,13 +257,13 @@ public struct Toast {
         
         return label
     }
-    static private func indexOfFirstNoneStyleWindowTask() -> Int {
+    static fileprivate func indexOfFirstNoneStyleWindowTask() -> Int {
         for i:Int in 0 ..< windowQueue.count {
             if !windowQueue[i].style.isModal { return i }
         }
         return windowQueue.count
     }
-    static private func taskFilterWithController(controller:UIViewController) -> [Task] {
+    static fileprivate func taskFilterWithController(_ controller:UIViewController) -> [Task] {
         var tasks:[Task] = []
         
         // 已显示的模态窗口 Toast.WindowTask
@@ -304,7 +304,7 @@ public struct Toast {
         return tasks
     }
     
-    static private func registerViewControllerClass<T : UIViewController>(cls:T.Type) {
+    static fileprivate func registerViewControllerClass<T : UIViewController>(_ cls:T.Type) {
         if cls === UIViewController.self || cls === UIImagePickerController.self {
             return
         }
@@ -315,7 +315,7 @@ public struct Toast {
         
         let taskDidDisappearIMP = method_getImplementation(taskDidDisappearMethod)
         
-        var viewDidDisappearIMP:IMP = nil
+        var viewDidDisappearIMP:IMP? = nil
         
         // 如果对象 没有 override func viewDidDisappear 则创建一个 并跳转到 taskDidDisappear
         if !class_addMethod(cls, viewDidDisappearSelector, taskDidDisappearIMP, method_getTypeEncoding(viewDidDisappearMethod)) {
@@ -334,8 +334,8 @@ public struct Toast {
         }
     }
     
-    static private var minDismissTime:NSTimeInterval {
-        var minDismissTime:NSTimeInterval = 0
+    static fileprivate var minDismissTime:TimeInterval {
+        var minDismissTime:TimeInterval = 0
         let currentTime = CACurrentMediaTime()
 
         for task in tasksQueue {
@@ -346,31 +346,31 @@ public struct Toast {
             }
         }
         // 计算最小更新时间
-        if let task = windowTask where !task.style.isModal {
+        if let task = windowTask, !task.style.isModal {
             if minDismissTime > task.dismissTime { minDismissTime = task.dismissTime }
         }
 
         return minDismissTime - currentTime
     }
-    static private var _afterBlock:(dispatch_block_t?, NSTimeInterval) = (nil, 0)
-    static private func animateTasks(isAfter:Bool = false) {
+    static fileprivate var _afterBlock:((()->Void)?, TimeInterval) = (nil, 0)
+    static fileprivate func animateTasks(_ isAfter:Bool = false) {
         let currentTime = CACurrentMediaTime()
 
-        let screenSize = UIApplication.sharedApplication().windows.first?.frame.size ?? UIScreen.mainScreen().bounds.size
+        let screenSize = UIApplication.shared.windows.first?.frame.size ?? UIScreen.main.bounds.size
         var animateTaskList:[Task] = []
         // 处理队列中要显示的
         
-        var minDismissTime:NSTimeInterval = 0
+        var minDismissTime:TimeInterval = 0
         
         // 将超时的 Toast.Task 都加入移除队列
-        for i in (0..<tasksQueue.count).reverse() {
+        for i in (0..<tasksQueue.count).reversed() {
         //for var i:Int = tasksQueue.count - 1; i>=0; i -= 1 {
             let task = tasksQueue[i]
 
             // 如果 Toast.Task 超时 则加入移除数组
             if currentTime > task.dismissTime {
                 cleanQueue.append(task)
-                tasksQueue.removeAtIndex(i)
+                tasksQueue.remove(at: i)
             } else if minDismissTime > task.dismissTime || minDismissTime == 0 {
                 // 否则获取最小消失时间
                 minDismissTime = task.dismissTime
@@ -378,16 +378,16 @@ public struct Toast {
         }
         // 如果当前显示的 Toast.WindowTask 非模态 则判断其是否超时
         
-        var currentWindowTask = windowModalTask ?? (windowModalQueue.count > 0 ? windowModalQueue.removeAtIndex(0) : nil)
-        if let task = windowTask where currentWindowTask == nil {
+        var currentWindowTask = windowModalTask ?? (windowModalQueue.count > 0 ? windowModalQueue.remove(at: 0) : nil)
+        if let task = windowTask, currentWindowTask == nil {
             if currentTime > task.dismissTime {
-                windowTask = windowQueue.count > 0 ? windowQueue.removeAtIndex(0) : nil
+                windowTask = windowQueue.count > 0 ? windowQueue.remove(at: 0) : nil
                 windowTask?.dismissTime = currentTime + windowTask!.duration
             }
             currentWindowTask = windowTask
         }
         if currentWindowTask == nil && windowQueue.count > 0 {
-            currentWindowTask = windowQueue.removeAtIndex(0)
+            currentWindowTask = windowQueue.remove(at: 0)
             currentWindowTask!.dismissTime = currentTime + currentWindowTask!.duration
         }
         
@@ -410,11 +410,11 @@ public struct Toast {
                 task.updateFrame()
                 
                 let window = overlayWindow
-                window.frame = UIScreen.mainScreen().bounds
+                window.frame = UIScreen.main.bounds
                 window.rootViewController!.view.gestureRecognizers = nil
                 (window.rootViewController!.view as? OverlayToastView)?.originPercent = CGPoint(x: task.view.center.x / window.frame.width, y: task.view.center.y / window.frame.height)
                 window.rootViewController!.view.alpha = 1
-                window.rootViewController!.view.hidden = false
+                window.rootViewController!.view.isHidden = false
                 
                 if task.style.isModal {
                     windowTask?.duration = max(windowTask!.dismissTime - currentTime, 0)
@@ -426,7 +426,7 @@ public struct Toast {
                 let y = task.view.center.y
                 task.view.center.y = (screenSize.height / 2) > y ? y - 30 : y + 30
                 
-                if case .ModalCanCancel(let direction) = task.style {
+                if case .modalCanCancel(let direction) = task.style {
                     // 如果是可自动终止的
                     let tap = UITapGestureRecognizer(target: task, action: #selector(WindowTask.hide(_:)))
                     let swipe = UISwipeGestureRecognizer(target: task, action: #selector(WindowTask.hide(_:)))
@@ -444,11 +444,11 @@ public struct Toast {
                 // 加入动画列表
                 animateTaskList.append(task)
             }
-            let color = task.style.isModal ? UIColor(white: 0.2, alpha: 0.6) : UIColor.clearColor()
+            let color = task.style.isModal ? UIColor(white: 0.2, alpha: 0.6) : UIColor.clear
             _overlayWindow!.rootViewController!.view.backgroundColor = color
 
             task.alpha = 1
-            _overlayWindow!.hidden = false
+            _overlayWindow!.isHidden = false
             //_overlayWindow!.makeKeyAndVisible()
         }
         
@@ -459,7 +459,7 @@ public struct Toast {
         var offsetY:CGFloat = 0
         
         // 所有需显示的
-        for i in (0..<tasksQueue.count).reverse() {
+        for i in (0..<tasksQueue.count).reversed() {
         //for var i:Int = tasksQueue.count - 1; i>=0; i -= 1 {
             let task = tasksQueue[i]
             
@@ -484,13 +484,13 @@ public struct Toast {
                 }
                 
                 // 隐藏 等待状态 Toast.Task 的子视图
-                for view in task.view.subviews where !view.hidden {
-                    view.hidden = true
+                for view in task.view.subviews where !view.isHidden {
+                    view.isHidden = true
                 }
             } else {
                 // 显示 等待状态 Toast.Task 的子视图
-                for view in task.view.subviews where view.hidden {
-                    view.hidden = false
+                for view in task.view.subviews where view.isHidden {
+                    view.isHidden = false
                 }
                 task.cornerRadius = task.defaultCornerRadius
             }
@@ -499,11 +499,11 @@ public struct Toast {
             // 如果尚未显示则动画出现
             if task.view.superview == nil {
                 task.view.alpha = 0.2
-                task.view.frame.origin = CGPointMake(x, y + 30)
+                task.view.frame.origin = CGPoint(x: x, y: y + 30)
                 task.view.frame.size = size
-                let keyWindow = UIApplication.sharedApplication().keyWindow ?? UIApplication.sharedApplication().windows.first
+                let keyWindow = UIApplication.shared.keyWindow ?? UIApplication.shared.windows.first
                 keyWindow?.addSubview(task.view)
-                if let controller = task.childController where controller !== task.viewController {
+                if let controller = task.childController, controller !== task.viewController {
                     task.viewController?.addChildViewController(controller)
                 }
             }
@@ -530,10 +530,10 @@ public struct Toast {
             task.alpha = 0
             
             // 加入动画列表
-            animateTaskList.insert(task, atIndex: 0)
+            animateTaskList.insert(task, at: 0)
         }
         
-        UIView.animateWithDuration(0.35, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 10, options: UIViewAnimationOptions.CurveEaseOut, animations: {
+        UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 10, options: UIViewAnimationOptions.curveEaseOut, animations: {
             // 对要移除的 Toast.Task 进行动画
             for task:Task in animateTaskList {
                 if task is WindowTask {
@@ -561,7 +561,7 @@ public struct Toast {
             }
             // 如果队列中再无 Toast.WindowTask 则移除窗口
             if hasWindowTask && windowTask === nil && windowModalTask === nil {
-                _overlayWindow?.hidden = true
+                _overlayWindow?.isHidden = true
                 _overlayWindow?.rootViewController?.view.gestureRecognizers = nil
                 _overlayWindow?.rootViewController?.removeFromParentViewController()
                 _overlayWindow?.rootViewController = nil
@@ -583,10 +583,12 @@ public struct Toast {
                 animateTasks(true)
             }, minDismissTime)
             
-            let delay:NSTimeInterval = animateTime * Double(NSEC_PER_SEC)
-            let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
-            
-            dispatch_after(time, dispatch_get_main_queue(), _afterBlock.0!)
+            let delay:TimeInterval = animateTime * Double(NSEC_PER_SEC)
+            //let time = DispatchTime.now() + delay
+            let time = DispatchTime.now() + Double(Int64(delay)) / Double(NSEC_PER_SEC)
+            DispatchQueue.main.asyncAfter(deadline: time, execute: { 
+                _afterBlock.0?()
+            })
         }
 //        print("下次动画时间:\(animateTime) _afterBlock:\(_afterBlock)")
 
@@ -595,23 +597,23 @@ public struct Toast {
 //        CFAbsoluteTimeGetCurrent()
     }
     
-    public class Task : Equatable {
+    open class Task : Equatable {
         
-        public let view:UIView
-        public var childController:UIViewController?
-        public weak var viewController:UIViewController?
+        open let view:UIView
+        open var childController:UIViewController?
+        open weak var viewController:UIViewController?
         
-        public var duration:NSTimeInterval = 0
-        private var inset:UIEdgeInsets = UIEdgeInsetsZero
-        private var autoresizingMask:UIViewAutoresizing = [.None]
-        private var dismissTime:NSTimeInterval = 0
-        private var defaultSize:CGSize
-        private var defaultCornerRadius:CGFloat = 8
-        private var cornerRadius:CGFloat = 8
-        private var frame:CGRect = CGRect.zero
-        private var alpha:CGFloat = 1
-        private var transform:CGAffineTransform = CGAffineTransformIdentity
-        private var onDismiss:(()->Void)?
+        open var duration:TimeInterval = 0
+        fileprivate var inset:UIEdgeInsets = UIEdgeInsets.zero
+        fileprivate var autoresizingMask:UIViewAutoresizing = UIViewAutoresizing()
+        fileprivate var dismissTime:TimeInterval = 0
+        fileprivate var defaultSize:CGSize
+        fileprivate var defaultCornerRadius:CGFloat = 8
+        fileprivate var cornerRadius:CGFloat = 8
+        fileprivate var frame:CGRect = CGRect.zero
+        fileprivate var alpha:CGFloat = 1
+        fileprivate var transform:CGAffineTransform = CGAffineTransform.identity
+        fileprivate var onDismiss:(()->Void)?
         
         public init(controller:UIViewController, view:UIView) {
             self.viewController = controller
@@ -621,13 +623,13 @@ public struct Toast {
             self.cornerRadius = view.layer.cornerRadius
             self.autoresizingMask = view.autoresizingMask
             self.defaultCornerRadius = cornerRadius
-            let size = UIScreen.mainScreen().bounds.size
+            let size = UIScreen.main.bounds.size
             let rect = view.frame
             self.inset = UIEdgeInsetsMake(rect.minY, rect.minX, size.height - rect.maxY, size.width - rect.maxX)
             //view.autoresizingMask = [.None]
         }
         
-        public func setAutoresizingMask(autoresizingMask:UIViewAutoresizing) -> Self {
+        open func setAutoresizingMask(_ autoresizingMask:UIViewAutoresizing) -> Self {
             self.autoresizingMask = autoresizingMask
             updateFrame()
             return self
@@ -641,62 +643,62 @@ public struct Toast {
             viewController = nil
         }
         
-        private func updateFrame() {
-            let size = UIScreen.mainScreen().bounds.size
+        fileprivate func updateFrame() {
+            let size = UIScreen.main.bounds.size
             var rect = view.frame
-            if autoresizingMask.contains(.FlexibleWidth) {
+            if autoresizingMask.contains(.flexibleWidth) {
                 rect.origin.x = inset.left == UITableViewAutomaticDimension ? 0 : inset.left
                 rect.size.width = inset.right == UITableViewAutomaticDimension ? size.width - rect.minX : size.width - rect.minX - inset.right
-            } else if autoresizingMask.contains([.FlexibleLeftMargin, .FlexibleRightMargin]) {
+            } else if autoresizingMask.contains([.flexibleLeftMargin, .flexibleRightMargin]) {
                 rect.origin.x = (size.width - rect.width) / 2
-            } else if autoresizingMask.contains(.FlexibleLeftMargin) {
+            } else if autoresizingMask.contains(.flexibleLeftMargin) {
                 rect.origin.x = size.width - rect.width - inset.right
-            } else if autoresizingMask.contains(.FlexibleRightMargin) {
+            } else if autoresizingMask.contains(.flexibleRightMargin) {
                 rect.origin.x = inset.left
             }
-            if autoresizingMask.contains(.FlexibleHeight) {
+            if autoresizingMask.contains(.flexibleHeight) {
                 rect.origin.y = inset.top == UITableViewAutomaticDimension ? 0 : inset.top
                 rect.size.height = inset.bottom == UITableViewAutomaticDimension ? size.height - rect.minY : size.height - rect.minY - inset.bottom
-            } else if autoresizingMask.contains([.FlexibleTopMargin, .FlexibleBottomMargin]) {
+            } else if autoresizingMask.contains([.flexibleTopMargin, .flexibleBottomMargin]) {
                 rect.origin.y = (size.height - rect.height) / 2
-            } else if autoresizingMask.contains(.FlexibleTopMargin) {
+            } else if autoresizingMask.contains(.flexibleTopMargin) {
                 rect.origin.y = size.height - rect.height - inset.bottom
-            } else if autoresizingMask.contains(.FlexibleBottomMargin) {
+            } else if autoresizingMask.contains(.flexibleBottomMargin) {
                 rect.origin.y = inset.top
             }
             view.frame = rect
             frame = rect
         }
         
-        private func updateInset() {
-            let size = UIScreen.mainScreen().bounds.size
-            inset.left = autoresizingMask.contains(.FlexibleLeftMargin) ? UITableViewAutomaticDimension : view.frame.minX
-            inset.right = autoresizingMask.contains(.FlexibleRightMargin) ? UITableViewAutomaticDimension : size.width - view.frame.maxX
-            inset.top = autoresizingMask.contains(.FlexibleTopMargin) ? UITableViewAutomaticDimension : view.frame.minY
-            inset.bottom = autoresizingMask.contains(.FlexibleBottomMargin) ? UITableViewAutomaticDimension : size.height - view.frame.maxY
+        fileprivate func updateInset() {
+            let size = UIScreen.main.bounds.size
+            inset.left = autoresizingMask.contains(.flexibleLeftMargin) ? UITableViewAutomaticDimension : view.frame.minX
+            inset.right = autoresizingMask.contains(.flexibleRightMargin) ? UITableViewAutomaticDimension : size.width - view.frame.maxX
+            inset.top = autoresizingMask.contains(.flexibleTopMargin) ? UITableViewAutomaticDimension : view.frame.minY
+            inset.bottom = autoresizingMask.contains(.flexibleBottomMargin) ? UITableViewAutomaticDimension : size.height - view.frame.maxY
         }
         
-        public func show(onDismiss:(()->Void)? = nil) {
+        open func show(_ onDismiss:(()->Void)? = nil) {
             self.onDismiss = onDismiss
             self.updateInset()
             dismissTime = CACurrentMediaTime() + duration + (Toast.tasksQueue.count > 2 ? Toast.minDismissTime : 0) // 计算消失时间
-            if let _ = Toast.tasksQueue.indexOf(self) {
+            if let _ = Toast.tasksQueue.index(of: self) {
                 return
             }
             Toast.tasksQueue.append(self)
             Toast.animateTasks(false)
         }
         
-        public func hide() {
+        open func hide() {
             hideLater()
             Toast.animateTasks(false)
         }
         
-        public func hideLater() {
-            if let index = Toast.tasksQueue.indexOf(self) {
-                Toast.tasksQueue.removeAtIndex(index)
+        open func hideLater() {
+            if let index = Toast.tasksQueue.index(of: self) {
+                Toast.tasksQueue.remove(at: index)
             }
-            if let _ = Toast.cleanQueue.indexOf(self) {
+            if let _ = Toast.cleanQueue.index(of: self) {
                 return
             }
             Toast.cleanQueue.append(self)
@@ -705,19 +707,19 @@ public struct Toast {
     }
 
     
-    public class WindowTask : Task {
+    open class WindowTask : Task {
         
         //private var orientation:UIInterfaceOrientation
-        private var style:ToastWindowStyle
-        public init(controller: UIViewController, view: UIView, style:ToastWindowStyle = .None(timeout: 8)) {
+        fileprivate var style:ToastWindowStyle
+        public init(controller: UIViewController, view: UIView, style:ToastWindowStyle = .none(timeout: 8)) {
             self.style = style
             //self.orientation = UIApplication.sharedApplication().statusBarOrientation
             super.init(controller: controller, view:view)
-            if case .None(let duration) = style {
+            if case .none(let duration) = style {
                 super.duration = duration
             }
         }
-        public override func show(onDismiss:(() -> Void)? = nil) {
+        open override func show(_ onDismiss:(() -> Void)? = nil) {
             self.onDismiss = onDismiss
             super.updateInset()
             if self.style.isModal {
@@ -728,47 +730,47 @@ public struct Toast {
             Toast.animateTasks(false)
         }
         
-        public override func hide() {
+        open override func hide() {
             hideLater()
             Toast.animateTasks(false)
         }
         
-        public override func hideLater() {
-            if let index = Toast.windowQueue.indexOf(self) {
-                Toast.windowQueue.removeAtIndex(index)
+        open override func hideLater() {
+            if let index = Toast.windowQueue.index(of: self) {
+                Toast.windowQueue.remove(at: index)
             }
-            if let index = Toast.windowModalQueue.indexOf(self) {
-                Toast.windowModalQueue.removeAtIndex(index)
+            if let index = Toast.windowModalQueue.index(of: self) {
+                Toast.windowModalQueue.remove(at: index)
             }
-            if let task = Toast.windowTask where self == task {
+            if let task = Toast.windowTask, self == task {
                 Toast.windowTask = nil
             }
-            if let task = Toast.windowModalTask where self == task {
+            if let task = Toast.windowModalTask, self == task {
                 Toast.windowModalTask = nil
                 Toast.windowTask?.dismissTime = CACurrentMediaTime() + windowTask!.duration
             }
         }
         
-        @objc public func hide(gesture:UIGestureRecognizer!) {
-            if !self.view.bounds.contains(gesture.locationInView(self.view)) { hide() }
+        @objc open func hide(_ gesture:UIGestureRecognizer!) {
+            if !self.view.bounds.contains(gesture.location(in: self.view)) { hide() }
         }
     }
     
-    public class ActivityTask : WindowTask {
+    open class ActivityTask : WindowTask {
         
-        public var activityView:UIActivityIndicatorView
-        public var label:UILabel
+        open var activityView:UIActivityIndicatorView
+        open var label:UILabel
         
-        public init(controller:UIViewController, message:String, style:ToastWindowStyle = .Modal) {
+        public init(controller:UIViewController, message:String, style:ToastWindowStyle = .modal) {
             let view = UIView()
             
             let insets = UIEdgeInsets(top: 2, left: 10, bottom: 2, right: 10)
             
             label = Toast.makeLabel(message, numberOfLines: 1)
-            label.backgroundColor = UIColor.clearColor()
+            label.backgroundColor = UIColor.clear
             label.layoutMargins = insets
 
-            activityView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.WhiteLarge)
+            activityView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.whiteLarge)
             activityView.sizeToFit()
             activityView.startAnimating()
             
@@ -781,12 +783,12 @@ public struct Toast {
 
             view.layer.cornerRadius = 8
             
-            view.layer.shadowColor = UIColor.blackColor().CGColor
+            view.layer.shadowColor = UIColor.black.cgColor
             view.layer.shadowOpacity = 0.8
             view.layer.shadowOffset = CGSize(width: 0, height: 2)
             
             view.frame.size = CGSize(width: max(labelWidth, activityWidth), height: labelHeight + activityHeight + Toast.interval * 4)
-            let screenSize = UIScreen.mainScreen().bounds.size
+            let screenSize = UIScreen.main.bounds.size
             view.center = CGPoint(x: screenSize.width / 2, y: screenSize.height / 2)
 
             activityView.frame.origin = CGPoint(x: (view.frame.width - activityView.frame.width) / 2, y: Toast.interval * 2 + insets.top)
@@ -796,10 +798,10 @@ public struct Toast {
             view.addSubview(label)
             
             super.init(controller: controller, view: view, style: style)
-            autoresizingMask = [.FlexibleLeftMargin, .FlexibleRightMargin, .FlexibleTopMargin, .FlexibleBottomMargin]
+            autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
         }
         
-        override public func show(onDismiss: (() -> Void)? = nil) {
+        override open func show(_ onDismiss: (() -> Void)? = nil) {
             Toast.activityTask = self
             super.show(onDismiss)
         }
@@ -809,7 +811,7 @@ public struct Toast {
 
 class OverlayToastView : UIView {
     
-    private var originPercent:CGPoint = CGPoint.zero
+    fileprivate var originPercent:CGPoint = CGPoint.zero
 
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -826,14 +828,14 @@ class OverlayToastView : UIView {
         }
     }
     
-    override func hitTest(point: CGPoint, withEvent event: UIEvent?) -> UIView? {
-        let view = super.hitTest(point, withEvent: event)
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let view = super.hitTest(point, with: event)
         // 如果模态 则忽略手势穿透
         if Toast.windowModalTask !== nil { return view }
         if view === self || view === nil {
-            let window = UIApplication.sharedApplication().windows.first
+            let window = UIApplication.shared.windows.first
             //print("操作穿透")
-            return window?.hitTest(point, withEvent: event) ?? view
+            return window?.hitTest(point, with: event) ?? view
         }
         return view
     }
@@ -843,14 +845,14 @@ class OverlayToastView : UIView {
 class OverlayRootController: UIViewController, UIGestureRecognizerDelegate {
     
     override func loadView() {
-        view = OverlayToastView(frame: UIScreen.mainScreen().bounds)
-        view.backgroundColor = UIColor.clearColor()
+        view = OverlayToastView(frame: UIScreen.main.bounds)
+        view.backgroundColor = UIColor.clear
     }
     
-    func gestureRecognizerShouldBegin(gestureRecognizer: UIGestureRecognizer) -> Bool {
-        let point = gestureRecognizer.locationInView(view)
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        let point = gestureRecognizer.location(in: view)
         for subView in view.subviews {
-            if CGRectContainsPoint(subView.frame, point) {
+            if subView.frame.contains(point) {
                 return false
             }
         }
@@ -873,20 +875,20 @@ class OverlayRootController: UIViewController, UIGestureRecognizerDelegate {
 
 extension UIViewController {
     
-    public override class func initialize() {
+    open override class func initialize() {
         Toast.registerViewControllerClass(self)
     }
     
-    func __selfDidDisappear(animated: Bool) {
+    func __selfDidDisappear(_ animated: Bool) {
         print("此方法用于回调原 ViewController 的 viewDidDisappear 函数指针被替换")
     }
     
-    final func taskDidDisappearAndRecall(animated: Bool) {
+    final func taskDidDisappearAndRecall(_ animated: Bool) {
         self.__selfDidDisappear(animated)  // 回调原 viewWillDisappear
         taskDidDisappear(animated)
     }
     
-    final func taskDidDisappear(animated: Bool) {
+    final func taskDidDisappear(_ animated: Bool) {
         
         // 视图离开时换回来 并删除 此视图控制器的 Toast.Task
         for task in Toast.taskFilterWithController(self) {

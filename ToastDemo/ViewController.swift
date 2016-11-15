@@ -29,48 +29,51 @@ class ViewController: UIViewController {
         
     ]
     var index:Int = 0
-    @IBAction func onToast(sender:AnyObject!) {
+    @IBAction func onToast(_ sender:AnyObject!) {
         if index >= contents.count { index = 0 }
-        Toast.makeText(self, message: "Toast \(contents[index++])", duration: 3).show()
+        Toast.makeText(self, message: "Toast \(contents[index])", duration: 3).show()
+        index += 1
     }
-    @IBAction func onClose(sender:AnyObject!) {
+    @IBAction func onClose(_ sender:AnyObject!) {
         if Toast.windowModalTask === nil {
 //            if Toast.windowTask === nil {
 //                Toast.makeNotificationOnTop(self, message: "notification content:\(++index)").show()
 //            } else {
 //                Toast.windowTask?.hide()
 //            }
-            Toast.makeNotificationOnBottom(self, message: "notification content:\(++index)").show()
+            index += 1
+            Toast.makeNotificationOnBottom(self, message: "notification content:\(index)").show()
         } else {
             Toast.windowModalTask?.hide()
         }
     }
-    @IBAction func onNotificationClick(sender:AnyObject!) {
+    @IBAction func onNotificationClick(_ sender:AnyObject!) {
         //Toast.makeNotification(self, message: "notification \(++index)", style: .ModalCanCancel([.Up, .Down])).show()
-        let controller = self.storyboard!.instantiateViewControllerWithIdentifier("TestTableController")// as! ViewController
+        let controller = self.storyboard!.instantiateViewController(withIdentifier: "TestTableController")// as! ViewController
         controller.view.frame.size = CGSize(width: 300, height: 250)
-        controller.view.frame.origin.x = (UIScreen.mainScreen().bounds.width - 300) / 2
-        controller.view.frame.origin.y = (UIScreen.mainScreen().bounds.height - 250) / 2
+        controller.view.frame.origin.x = (UIScreen.main.bounds.width - 300) / 2
+        controller.view.frame.origin.y = (UIScreen.main.bounds.height - 250) / 2
         
-        Toast.makeWindow(self, toastController: controller, style: .ModalCanCancel(cancelDirection: [.Up, .Down]))
-            .setAutoresizingMask([.FlexibleWidth, .FlexibleTopMargin, .FlexibleBottomMargin])
+        Toast.makeWindow(self, toastController: controller, style: .modalCanCancel(cancelDirection: [.up, .down]))
+            .setAutoresizingMask([.flexibleWidth, .flexibleTopMargin, .flexibleBottomMargin])
             .show()
     }
-    @IBAction func onButtonClick(sender:AnyObject!) {
+    @IBAction func onButtonClick(_ sender:AnyObject!) {
         switch textBox.highlightState {
-        case .Default:
-            textBox.highlightState = UITextBoxHighlightState.Validator("ok")
-        case .Validator:
-            textBox.highlightState = UITextBoxHighlightState.Warning("warning")
-        case .Warning:
-            textBox.highlightState = UITextBoxHighlightState.Wrong("wrong")
-        case .Wrong:
-            textBox.highlightState = UITextBoxHighlightState.Default
+        case .default:
+            textBox.highlightState = UITextBoxHighlightState.validator("ok")
+        case .validator:
+            textBox.highlightState = UITextBoxHighlightState.warning("warning")
+        case .warning:
+            textBox.highlightState = UITextBoxHighlightState.wrong("wrong")
+        case .wrong:
+            textBox.highlightState = UITextBoxHighlightState.default
         }
         if let activityToast = Toast.activityTask {
             activityToast.hide()
         } else {
-            Toast.makeActivity(self, message: "activity view is show:\(++index)", style: .None(timeout: 300)).show()
+            index += 1
+            Toast.makeActivity(self, message: "activity view is show:\(index)", style: .none(timeout: 300)).show()
         }
         //textBox.highlightState = UITextBoxHighlightState.Validator("ok")
         //Toast.makeActivity(self, message: "This is a activity toast").show()
@@ -82,7 +85,7 @@ class ViewController: UIViewController {
     
     @IBOutlet var textBox:UITextBox!
 
-    override func viewDidDisappear(animated: Bool) {
+    override func viewDidDisappear(_ animated: Bool) {
         //super.viewWillDisappear(animated)
         print("viewDidDisappear View")
     }
